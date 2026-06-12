@@ -129,7 +129,9 @@ def _enforce_screenshot_retention():
         old_rows = conn.execute(
             "SELECT id, screenshot_path FROM screenshots WHERE timestamp < ?", (cutoff,)
         ).fetchall()
+        deleted_ids = []
         for row_id, path in old_rows:
+            deleted_ids.append(row_id)
             try:
                 if path and Path(path).exists():
                     Path(path).unlink()
@@ -144,6 +146,7 @@ def _enforce_screenshot_retention():
         if len(all_rows) > MAX_SCREENSHOT_COUNT:
             excess = all_rows[MAX_SCREENSHOT_COUNT:]
             for row_id, path in excess:
+                deleted_ids.append(row_id)
                 try:
                     if path and Path(path).exists():
                         Path(path).unlink()
@@ -153,6 +156,17 @@ def _enforce_screenshot_retention():
 
         conn.commit()
         conn.close()
+
+        # Prune vectors from ChromaDB
+        if deleted_ids:
+            col = _get_chroma_collection()
+            if col is not None:
+                try:
+                    col.delete(ids=deleted_ids)
+                    print(f"[Memory] Pruned {len(deleted_ids)} old vectors from ChromaDB.")
+                except Exception as e:
+                    print(f"[Memory] ChromaDB pruning error: {e}")
+
     except Exception as e:
         print(f"[Memory] Retention cleanup error: {e}")
 

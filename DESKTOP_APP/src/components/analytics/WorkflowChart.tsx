@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { authenticatedFetch } from '../../store/auth.store'
 import { motion } from 'framer-motion'
 
 const API = 'http://127.0.0.1:8765'
@@ -7,7 +8,7 @@ export const WorkflowChart = () => {
   const { data, isLoading } = useQuery({
     queryKey: ['heatmap'],
     queryFn: async () => {
-      const res = await fetch(`${API}/api/analytics/heatmap`)
+      const res = await authenticatedFetch(`${API}/api/analytics/heatmap`)
       const json = await res.json()
       return json.data as { hour: number; intensity: number }[]
     },

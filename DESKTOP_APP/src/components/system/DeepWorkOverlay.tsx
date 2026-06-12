@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { authenticatedFetch } from '../../store/auth.store'
 import { useUIStore } from '../../store/ui.store'
 import { useWorkspaceStore } from '../../store/workspace.store'
 
@@ -24,7 +25,7 @@ export const DeepWorkOverlay = () => {
       : []
 
     try {
-      const res = await fetch(`${API}/api/focus/activate`, {
+      const res = await authenticatedFetch(`${API}/api/focus/activate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -55,7 +56,7 @@ export const DeepWorkOverlay = () => {
 
   const handleExit = async () => {
     try {
-      await fetch(`${API}/api/focus/deactivate`, { method: 'POST' })
+      await authenticatedFetch(`${API}/api/focus/deactivate`, { method: 'POST' })
     } catch {}
     setFocusWorkspace(null)
     setStatus('idle')
@@ -68,13 +69,12 @@ export const DeepWorkOverlay = () => {
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(0,0,0,0.92)',
+        background: '#000000',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 2000,
-        backdropFilter: 'blur(12px)',
       }}
     >
       {/* Geometric decoration */}

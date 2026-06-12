@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-export type AccentColor = 'mint' | 'red' | 'blue' | 'purple' | 'orange'
+export type AccentColor = 'mint' | 'red' | 'blue' | 'purple' | 'orange' | 'black'
 export type OllamaModel = 'qwen2.5:7b' | 'qwen2.5:3b'
 
 interface AccentDef {
@@ -12,6 +12,7 @@ interface AccentDef {
 }
 
 export const ACCENTS: Record<AccentColor, AccentDef> = {
+  black:  { value: '#000000', r: 0,   g: 0,   b: 0   },
   mint:   { value: '#00C896', r: 0,   g: 200, b: 150 },
   red:    { value: '#E53935', r: 229, g: 57,  b: 53  },
   blue:   { value: '#1E88E5', r: 30,  g: 136, b: 229 },
@@ -23,9 +24,11 @@ interface SettingsState {
   accent: AccentColor
   model: OllamaModel
   extensionConnected: boolean
+  isInverted: boolean
   setAccent: (a: AccentColor) => void
   setModel: (m: OllamaModel) => void
   setExtensionConnected: (v: boolean) => void
+  setInverted: (v: boolean) => void
   applyAccentToDOM: () => void
 }
 
@@ -35,6 +38,7 @@ export const useSettingsStore = create<SettingsState>()(
       accent: 'mint',
       model: 'qwen2.5:7b',
       extensionConnected: false,
+      isInverted: false,
 
       setAccent: (accent) => {
         set({ accent })
@@ -43,17 +47,48 @@ export const useSettingsStore = create<SettingsState>()(
 
       setModel: (model) => set({ model }),
       setExtensionConnected: (v) => set({ extensionConnected: v }),
+      setInverted: (isInverted) => {
+        set({ isInverted })
+        get().applyAccentToDOM()
+      },
 
       applyAccentToDOM: () => {
-        const { accent } = get()
+        const { accent, isInverted } = get()
         const def = ACCENTS[accent]
         const root = document.documentElement
-        root.style.setProperty('--accent', def.value)
-        root.style.setProperty('--accent-r', String(def.r))
-        root.style.setProperty('--accent-g', String(def.g))
-        root.style.setProperty('--accent-b', String(def.b))
-        root.style.setProperty('--accent-light', `rgba(${def.r},${def.g},${def.b},0.08)`)
-        root.style.setProperty('--accent-mid',   `rgba(${def.r},${def.g},${def.b},0.18)`)
+        
+        if (isInverted) {
+          // Inverted: Background becomes the accent color, ink becomes white
+          root.style.setProperty('--bg', def.value)
+          root.style.setProperty('--bg-panel', def.value)
+          root.style.setProperty('--bg-hover', `rgba(255,255,255,0.1)`)
+          root.style.setProperty('--ink', '#FFFFFF')
+          root.style.setProperty('--ink-2', 'rgba(255,255,255,0.85)')
+          root.style.setProperty('--ink-3', 'rgba(255,255,255,0.6)')
+          root.style.setProperty('--ink-4', 'rgba(255,255,255,0.4)')
+          root.style.setProperty('--border', 'rgba(255,255,255,0.15)')
+          root.style.setProperty('--border-hard', 'rgba(255,255,255,0.3)')
+          root.style.setProperty('--accent', '#FFFFFF')
+          root.style.setProperty('--accent-light', 'rgba(255,255,255,0.15)')
+          root.style.setProperty('--accent-mid', 'rgba(255,255,255,0.25)')
+        } else {
+          // Default: Minimal White with accent
+          root.style.setProperty('--bg', '#F8F7F4')
+          root.style.setProperty('--bg-panel', '#FFFFFF')
+          root.style.setProperty('--bg-hover', `rgba(${def.r},${def.g},${def.b},0.03)`)
+          root.style.setProperty('--ink', '#000000')
+          root.style.setProperty('--ink-2', '#3A3A3A')
+          root.style.setProperty('--ink-3', '#7A7A7A')
+          root.style.setProperty('--ink-4', `rgba(${def.r},${def.g},${def.b},0.25)`)
+          root.style.setProperty('--border', `rgba(${def.r},${def.g},${def.b},0.15)`)
+          root.style.setProperty('--border-hard', `rgba(${def.r},${def.g},${def.b},0.4)`)
+          root.style.setProperty('--accent', def.value)
+          root.style.setProperty('--accent-r', String(def.r))
+          root.style.setProperty('--accent-g', String(def.g))
+          root.style.setProperty('--accent-b', String(def.b))
+          root.style.setProperty('--accent-light', `rgba(${def.r},${def.g},${def.b},0.08)`)
+          root.style.setProperty('--accent-mid', `rgba(${def.r},${def.g},${def.b},0.18)`)
+        }
       },
     }),
     { name: 'knemos-settings' }

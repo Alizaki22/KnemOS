@@ -13,7 +13,7 @@ export const TitleBar = () => {
   const { activePanel } = useUIStore()
   const { ramStats } = useSystemStore()
   
-  const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
+  const isTauri = typeof window !== 'undefined' && ('__TAURI_INTERNALS__' in window || '__TAURI_IPC__' in window || '__TAURI__' in window)
   const appWindow = isTauri ? getCurrentWindow() : null
 
   const isConnected = ramStats !== null

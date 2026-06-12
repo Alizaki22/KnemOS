@@ -23,7 +23,13 @@ This document outlines all current capabilities of the KnemOS ecosystem and trac
   - Cognitive focus scoring and workspace metrics.
 - [x] **Settings & Preferences**:
   - Dynamic Accent Color switching (updates CSS Custom Properties in real-time).
+  - Pure Inverted Theme mode (Monochrome background, white text).
+  - Resource Intelligence showing exact MB footprints of vector stores and DBs.
   - Local AI Model Selector (7B vs 3B).
+- [x] **Workspace Context Overviews**:
+  - Semantic workspace previews.
+  - AI-generated semantic summaries describing active intent.
+  - Intelligent Icon System pulling live favicons and system processes.
 
 ### 🧠 Backend (FastAPI + Local AI)
 - [x] **System Telemetry**:
@@ -31,7 +37,10 @@ This document outlines all current capabilities of the KnemOS ecosystem and trac
 - [x] **Core Architecture Shell**:
   - Structured routing for `workspace`, `memory`, `analytics`, `system`, and `chat`.
 - [x] **WebSocket Manager**:
-  - Basic connection pool for real-time frontend syncing.
+  - Event-driven connection pool for real-time frontend syncing.
+  - Robust `useStableWebSocket` auto-reconnection architecture without memory leaks.
+- [x] **Automated Testing Suite**:
+  - `system_ingestion_test.py`, `websocket_test.py`, `focus_test.py`.
 
 ---
 
@@ -39,10 +48,16 @@ This document outlines all current capabilities of the KnemOS ecosystem and trac
 
 - [ ] **Ollama Model Integration**:
   - Wiring the `/api/chat` and `/api/workspace` endpoints directly to local `qwen2.5:7b` instances for real semantic clustering.
-- [ ] **ChromaDB Vector Store**:
+- [x] **ChromaDB Vector Store**:
   - Implementing the OCR + Embedding pipeline for screenshots.
-- [ ] **File System Plugins**:
-  - Future implementation of `tauri-plugin-dialog` to natively export and import analytics JSON payloads. Currently handled via clipboard copy with `react-hot-toast` UX feedback.
+- [x] **File System Plugins**:
+  - Implemented `tauri-plugin-dialog` to natively export and save analytics JSON payloads to the user's local disk, with clipboard fallback for web contexts.
+
+---
+
+## 🧪 Experimental Systems
+- **AI Suggested Workspaces**: Experimental semantic clustering engine recommending active grouping of apps and browser tabs directly from telemetry. Available via the Settings overlay.
+- **Deep Focus Window Watchdog**: Background loop that forcefully minimizes un-protected non-workspace applications. Currently triggers via pywin32 bindings.
 
 ---
 

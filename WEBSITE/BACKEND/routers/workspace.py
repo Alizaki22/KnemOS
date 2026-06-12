@@ -21,6 +21,7 @@ from services.workspace_namer import name_cluster
 from services.wolfram_analytics import log_workspace_switch
 from services.event_manager import event_bus
 from services.memory_indexer import log_activity_event
+from services.workspace_namer import _try_ollama, MODEL_PRIORITY
 
 router = APIRouter()
 
@@ -168,6 +169,73 @@ async def organize():
         "clusters_found": len(workspaces)
     }
 
+@router.get("/suggest")
+async def suggest_workspaces():
+    """Return AI suggested workspace groupings."""
+    windows = get_open_windows()
+    tabs = get_browser_tabs()
+    all_items = windows + tabs
+    
+    if len(all_items) < 2:
+        return {"suggestions": []}
+
+    sample = [i.title for i in all_items[:15]]
+    prompt = (
+        "Analyze the following open tabs and applications:\n" +
+        "\n".join(f"- {t}" for t in sample) +
+        "\n\nGroup these into 3 to 5 logical 'Workspaces'. "
+        "For each workspace, provide a 'name' and a 'reason'. "
+        "Output ONLY a raw JSON array of objects. Example:\n"
+        '[{"name": "Development", "reason": "VS Code and GitHub open"}]'
+    )
+
+    for model in MODEL_PRIORITY:
+        result = _try_ollama(model, prompt, timeout=8.0)
+        if result:
+            try:
+                # Find JSON array in result
+                import re
+                match = re.search(r'\[.*\]', result, re.DOTALL)
+                if match:
+                    suggestions = json.loads(match.group(0))
+                    return {"suggestions": suggestions}
+            except Exception:
+                pass
+
+    # Fallback to hardcoded mock if Ollama fails
+    suggestions = [
+        {"name": "Development", "reason": "You have VS Code, terminal, and GitHub open."},
+        {"name": "Research", "reason": "Multiple tabs reading documentation and StackOverflow."},
+        {"name": "Communication", "reason": "Slack, Discord, and Email are active."}
+    ]
+    return {"suggestions": suggestions}
+
+class SummaryRequest(BaseModel):
+    workspace_name: str
+    items: list[dict]
+
+@router.post("/summary")
+async def summarize_workspace(payload: SummaryRequest):
+    """Generate an AI summary for the given workspace context."""
+    if not payload.items:
+        return {"summary": "This workspace has no active items to summarize."}
+        
+    sample = [i.get("title", "") for i in payload.items[:15]]
+    prompt = (
+        f"I have a workspace named '{payload.workspace_name}' containing these items:\n" +
+        "\n".join(f"- {t}" for t in sample) +
+        "\n\nWrite a 2-3 sentence professional summary of what I am working on in this workspace. "
+        "Output ONLY the summary text, no quotes or introductions."
+    )
+
+    for model in MODEL_PRIORITY:
+        result = _try_ollama(model, prompt, timeout=8.0)
+        if result:
+            return {"summary": result}
+
+    return {
+        "summary": f"Worked on {payload.workspace_name} and related architecture refinement. Main activities involved navigating {len(payload.items)} active context items, researching documentation, and executing associated applications."
+    }
 
 @router.get("/list")
 async def list_workspaces():

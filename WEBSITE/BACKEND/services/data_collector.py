@@ -6,6 +6,7 @@ Uses pywin32 + psutil for Windows-native access.
 import psutil
 import win32gui
 import win32process
+import hashlib
 from models.schemas import WorkspaceItem
 from typing import List
 
@@ -87,21 +88,22 @@ def get_ram_stats() -> dict:
     }
 
 
-# In-memory store for browser tabs received from Chrome Extension
-_browser_tabs: list[dict] = []
+# In-memory store for browser tabs per extension instance
+_browser_streams: dict[str, list[dict]] = {}
 
-
-def update_browser_tabs(tabs: list[dict]):
-    global _browser_tabs
-    _browser_tabs = tabs
-
+def update_browser_tabs(browser_id: str, browser_type: str, tabs: list[dict]):
+    global _browser_streams
+    _browser_streams[browser_id] = tabs
 
 def get_browser_tabs() -> List[WorkspaceItem]:
-    return [
-        WorkspaceItem(title=t['title'], source='browser_tab', url=t.get('url'))
-        for t in _browser_tabs
-        if t.get('title')
-    ]
+    all_tabs = []
+    for tabs in _browser_streams.values():
+        all_tabs.extend([
+            WorkspaceItem(title=t['title'], source='browser_tab', url=t.get('url'))
+            for t in tabs
+            if t.get('title')
+        ])
+    return all_tabs
 
 
 def get_all_items_categorized() -> dict:
@@ -118,19 +120,28 @@ def get_all_items_categorized() -> dict:
         title_lower = w.title.lower()
         is_browser = any(b in title_lower for b in BROWSER_TITLES)
         item = w.model_dump()
+        
+        path_str = item.get('path') or ''
+        title_str = item.get('title') or ''
+        # hash executable path + title
+        base_id = hashlib.md5(f"{path_str}:{title_str}".encode()).hexdigest()[:12]
+        
         if is_browser:
-            browsers.append({**item, "categoryType": "browsers"})
+            browsers.append({**item, "id": f"browser-{base_id}", "categoryType": "browsers"})
         else:
-            apps.append({**item, "categoryType": "apps"})
+            apps.append({**item, "id": f"app-{base_id}", "categoryType": "apps"})
 
-    tab_items = [
-        {**t.model_dump(), "categoryType": "tabs"}
-        for t in tabs
-    ]
+    tab_items = []
+    for t in tabs:
+        url_str = t.url or ''
+        title_str = t.title or ''
+        # hash normalized URL + title
+        base_id = hashlib.md5(f"{url_str.split('?')[0]}:{title_str}".encode()).hexdigest()[:12]
+        tab_items.append({**t.model_dump(), "id": f"tab-{base_id}", "categoryType": "tabs"})
 
     proc_items = [
         {
-            "id": f"proc-{p['pid']}",
+            "id": f"proc-{p['name']}",
             "title": p['name'],
             "source": "process",
             "categoryType": "processes",

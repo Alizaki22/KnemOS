@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { authenticatedFetch } from '../store/auth.store'
 
 
 // If no mouse/keyboard activity for 5 minutes (300000ms), trigger idle flow.
@@ -42,7 +43,7 @@ export const useFocusAutomation = () => {
 
   const handleUserReturn = () => {
     // 1. Notify backend to minimize background noise
-    fetch('http://127.0.0.1:8765/api/workspace/focus', { method: 'POST' })
+    authenticatedFetch('http://127.0.0.1:8765/api/workspace/focus', { method: 'POST' })
       .catch(() => {})
 
     // 2. Optionally trigger Deep Work mode in UI automatically if there's high distraction

@@ -8,6 +8,7 @@ System endpoints:
   GET  /api/system/focus             — current cognitive focus score
   POST /api/system/browser-tabs      — receive tabs from Chrome Extension
 """
+import os
 from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import List
@@ -19,6 +20,9 @@ router = APIRouter()
 
 
 class TabsPayload(BaseModel):
+    browser_id: str = "default"
+    browser_type: str = "chrome"
+    session_id: str = "default"
     tabs: List[BrowserTab]
 
 
@@ -47,16 +51,18 @@ async def processes():
 
 @router.get("/focus")
 async def focus():
-    """Return current cognitive focus score — was previously missing (404)."""
+    """Return current cognitive focus score - was previously missing (404)."""
     return compute_focus_score()
 
 
 @router.post("/browser-tabs")
 async def receive_tabs(payload: TabsPayload):
-    """Chrome Extension posts browser tabs here."""
+    """Browser Extensions post tabs here."""
     from services.memory_indexer import log_activity_event
     tabs = [t.model_dump() for t in payload.tabs]
-    update_browser_tabs(tabs)
+    
+    # Pass metadata to update_browser_tabs
+    update_browser_tabs(payload.browser_id, payload.browser_type, tabs)
 
     # Log tabs as activity events for RAG context
     for tab in tabs[:10]:  # Log top 10 tabs only
@@ -67,3 +73,23 @@ async def receive_tabs(payload: TabsPayload):
             })
 
     return {"status": "ok", "received": len(tabs)}
+
+
+def get_dir_size(path: str) -> float:
+    total = 0
+    if os.path.exists(path):
+        for dirpath, _, filenames in os.walk(path):
+            for f in filenames:
+                fp = os.path.join(dirpath, f)
+                if not os.path.islink(fp):
+                    total += os.path.getsize(fp)
+    return total / (1024 * 1024)
+
+@router.get("/resources")
+async def get_resources():
+    return {
+        "screenshots_mb": round(get_dir_size("./data/screenshots"), 2),
+        "chromadb_mb": round(get_dir_size("./data/chromadb"), 2),
+        "sqlite_mb": round(os.path.getsize("./data/knemos.db") / (1024*1024) if os.path.exists("./data/knemos.db") else 0, 2),
+        "screenshots_path": os.path.abspath("./data/screenshots"),
+    }

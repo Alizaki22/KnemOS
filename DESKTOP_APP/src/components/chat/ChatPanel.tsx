@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { authenticatedFetch } from '../../store/auth.store'
 import { useChatStore } from '../../store/chat.store'
 
 type ChatMode = 'query' | 'rag'
@@ -21,7 +22,7 @@ const formatTime = (ts: number) =>
   new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 
 export const ChatPanel = () => {
-  const { messages, isLoading, sendMessage } = useChatStore()
+  const { messages, isLoadingQuery, isLoadingRag, sendMessage } = useChatStore()
   const [input, setInput] = useState('')
   const [mode, setMode] = useState<ChatMode>('query')
   const [ollamaStatus, setOllamaStatus] = useState<null | { running: boolean; model_available: boolean }>(null)
@@ -33,7 +34,7 @@ export const ChatPanel = () => {
 
   // Check Ollama status once on mount
   useEffect(() => {
-    fetch('http://127.0.0.1:8765/api/chat/status', { signal: AbortSignal.timeout(3000) })
+    authenticatedFetch('http://127.0.0.1:8765/api/chat/status', { signal: AbortSignal.timeout(3000) })
       .then(r => r.json())
       .then(data => setOllamaStatus(data))
       .catch(() => setOllamaStatus({ running: false, model_available: false }))
@@ -41,6 +42,7 @@ export const ChatPanel = () => {
 
   const handleSend = () => {
     const text = input.trim()
+    const isLoading = mode === 'rag' ? isLoadingRag : isLoadingQuery
     if (!text || isLoading) return
     setInput('')
     sendMessage(text, mode)
@@ -54,7 +56,8 @@ export const ChatPanel = () => {
   }
 
   const suggestions = mode === 'rag' ? RAG_SUGGESTIONS : QUERY_SUGGESTIONS
-  const filteredMessages = messages.filter(m => m.mode === mode || !m.mode)
+  const filteredMessages = messages.filter((m: any) => m.mode === mode || !m.mode)
+  const currentIsLoading = mode === 'rag' ? isLoadingRag : isLoadingQuery
 
   return (
     <div className="chat-panel">
@@ -154,7 +157,7 @@ export const ChatPanel = () => {
           </div>
         )}
 
-        {filteredMessages.map((msg) => (
+        {filteredMessages.map((msg: any) => (
           <div key={msg.id} className={`chat-message ${msg.role}`}>
             <div className="chat-message-avatar">
               {msg.role === 'user' ? 'U' : '○'}
@@ -166,7 +169,7 @@ export const ChatPanel = () => {
           </div>
         ))}
 
-        {isLoading && (
+        {currentIsLoading && (
           <div className="chat-message assistant">
             <div className="chat-message-avatar">○</div>
             <div className="chat-bubble" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -213,7 +216,7 @@ export const ChatPanel = () => {
             onKeyDown={handleKey}
             rows={1}
           />
-          <button className="chat-send-btn" onClick={handleSend} disabled={isLoading}>
+          <button className="chat-send-btn" onClick={handleSend} disabled={currentIsLoading}>
             +
           </button>
         </div>

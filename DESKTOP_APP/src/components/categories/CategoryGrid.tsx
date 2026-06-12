@@ -1,5 +1,6 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { CategoryCard } from './CategoryCard'
+import { ProcessCategoryCard } from './ProcessCategoryCard'
 import { useCategoriesStore, CategoryType, CategoryItem } from '../../store/categories.store'
 import { useUIStore } from '../../store/ui.store'
 import { useWorkspaceStore } from '../../store/workspace.store'
@@ -10,38 +11,15 @@ import { PendingNewItemsOverlay } from '../dnd/PendingNewItemsOverlay'
 const CATEGORY_ORDER: CategoryType[] = ['browsers', 'apps', 'tabs', 'files', 'processes']
 
 export const CategoryGrid = () => {
-  const { categories, stageMoveItem } = useCategoriesStore()
-  const { setPendingChanges, activeCategoryModal } = useUIStore()
+  const { categories } = useCategoriesStore()
+  const { activeCategoryModal } = useUIStore()
   const { addItemToWorkspace } = useWorkspaceStore()
 
   const [dragItem, setDragItem] = useState<CategoryItem | null>(null)
-  const [dragOverCategory, setDragOverCategory] = useState<CategoryType | null>(null)
-  const pendingCount = useRef(0)
+
 
   const handleDragStart = (item: CategoryItem) => {
     setDragItem(item)
-  }
-
-  const handleDragOver = (e: React.DragEvent, to: CategoryType) => {
-    e.preventDefault()
-    setDragOverCategory(to)
-  }
-
-  const handleDragLeave = () => {
-    setDragOverCategory(null)
-  }
-
-  const handleDrop = (to: CategoryType) => {
-    setDragOverCategory(null)
-    if (!dragItem) return
-    if (dragItem.categoryType === to) {
-      setDragItem(null)
-      return
-    }
-    stageMoveItem(dragItem.id, dragItem.categoryType, to)
-    pendingCount.current += 1
-    setPendingChanges(true, pendingCount.current)
-    setDragItem(null)
   }
 
   const handleDropOnWorkspace = (workspaceId: string) => {
@@ -88,18 +66,20 @@ export const CategoryGrid = () => {
 
       {/* Category cards */}
       <div className="category-grid">
-        {CATEGORY_ORDER.map((cat) => (
+        {CATEGORY_ORDER.filter(c => c !== 'processes').map((cat) => (
           <CategoryCard
             key={cat}
             categoryType={cat}
             items={categories[cat] || []}
             onDragStart={handleDragStart}
-            onDrop={handleDrop}
-            isDragOver={dragOverCategory === cat}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
           />
         ))}
+        
+        {/* Full-width Process Card */}
+        <ProcessCategoryCard 
+          items={categories['processes'] || []} 
+          onDragStart={handleDragStart} 
+        />
       </div>
 
       {/* Workspace section — separated below categories */}

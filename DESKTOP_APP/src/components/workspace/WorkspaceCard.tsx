@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { authenticatedFetch } from '../../store/auth.store'
 import { useState } from 'react'
 import { UserWorkspace, useWorkspaceStore } from '../../store/workspace.store'
 import { WorkspaceItem } from './WorkspaceItem'
@@ -22,7 +23,7 @@ export const WorkspaceCard = ({ workspace }: Props) => {
     e.stopPropagation()
     setFocusWorkspace(workspace.id)
     try {
-      await fetch(`http://127.0.0.1:8765/api/workspace/restore/${workspace.id}`, {
+      await authenticatedFetch(`http://127.0.0.1:8765/api/workspace/restore/${workspace.id}`, {
         method: 'POST'
       })
     } catch (err) {

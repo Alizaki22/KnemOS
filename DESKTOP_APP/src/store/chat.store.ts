@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { authenticatedFetch } from './auth.store'
 
 export interface ChatMessage {
   id: string
@@ -16,7 +17,8 @@ export interface ChatMessage {
 
 interface ChatState {
   messages: ChatMessage[]
-  isLoading: boolean
+  isLoadingQuery: boolean
+  isLoadingRag: boolean
   addMessage: (msg: Omit<ChatMessage, 'id' | 'timestamp'>) => void
   sendMessage: (text: string, mode?: 'query' | 'rag') => Promise<void>
   clearChat: () => void
@@ -26,7 +28,8 @@ const API = 'http://127.0.0.1:8765'
 
 export const useChatStore = create<ChatState>((set, get) => ({
   messages: [],
-  isLoading: false,
+  isLoadingQuery: false,
+  isLoadingRag: false,
 
   addMessage: (msg) => {
     const full: ChatMessage = {
@@ -41,15 +44,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const { addMessage } = get()
 
     addMessage({ role: 'user', content: text, mode })
-    set({ isLoading: true })
+    
+    if (mode === 'rag') set({ isLoadingRag: true })
+    else set({ isLoadingQuery: true })
 
     try {
       const history = get().messages
-        .filter(m => m.mode === mode)
+        .filter((m: ChatMessage) => m.mode === mode)
         .slice(-8)
-        .map(m => ({ role: m.role, content: m.content }))
+        .map((m: ChatMessage) => ({ role: m.role, content: m.content }))
 
-      const res = await fetch(`${API}/api/chat`, {
+      const res = await authenticatedFetch(`${API}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text, history, mode }),
@@ -71,7 +76,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
         mode,
       })
     } finally {
-      set({ isLoading: false })
+      if (mode === 'rag') set({ isLoadingRag: false })
+      else set({ isLoadingQuery: false })
     }
   },
 

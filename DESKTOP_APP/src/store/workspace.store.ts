@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { authenticatedFetch } from './auth.store'
 
 export interface WorkspaceItem {
   id: string
@@ -53,7 +54,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
 
       fetchWorkspaces: async () => {
         try {
-          const res = await fetch(`${API}/api/workspace/user-workspaces`)
+          const res = await authenticatedFetch(`${API}/api/workspace/user-workspaces`)
           if (!res.ok) return
           const data = await res.json()
           const mapped: UserWorkspace[] = (data.workspaces || []).map((w: any) => ({
@@ -81,7 +82,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
         set((state) => ({ workspaces: [...state.workspaces, newWs] }))
 
         try {
-          const res = await fetch(`${API}/api/workspace/user-workspaces`, {
+          const res = await authenticatedFetch(`${API}/api/workspace/user-workspaces`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, items: [] })
@@ -113,7 +114,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
           workspaces: state.workspaces.filter(w => w.id !== id),
           focusWorkspaceId: state.focusWorkspaceId === id ? null : state.focusWorkspaceId
         }))
-        fetch(`${API}/api/workspace/user-workspaces/${id}`, { method: 'DELETE' }).catch(() => {})
+        authenticatedFetch(`${API}/api/workspace/user-workspaces/${id}`, { method: 'DELETE' }).catch(() => {})
       },
 
       addItemToWorkspace: (workspaceId, item) => {
@@ -156,7 +157,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
 
       syncToBackend: async (ws) => {
         try {
-          await fetch(`${API}/api/workspace/user-workspaces/${ws.id}`, {
+          await authenticatedFetch(`${API}/api/workspace/user-workspaces/${ws.id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name: ws.name, items: ws.items })

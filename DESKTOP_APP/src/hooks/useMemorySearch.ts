@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { authenticatedFetch } from '../store/auth.store'
 import { MemoryResultData } from '../store/memory.store'
 
 const API = 'http://127.0.0.1:8765'
@@ -9,7 +10,7 @@ export const useMemorySearch = (query: string) => {
     queryFn: async (): Promise<MemoryResultData[]> => {
       if (!query.trim()) return []
       
-      const res = await fetch(`${API}/api/memory/search`, {
+      const res = await authenticatedFetch(`${API}/api/memory/search`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

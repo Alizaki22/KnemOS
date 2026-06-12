@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { authenticatedFetch } from '../../store/auth.store'
 import { useCategoriesStore } from '../../store/categories.store'
 
 const API = 'http://127.0.0.1:8765'
@@ -14,10 +15,10 @@ export const OrganizeButton = () => {
 
     try {
       // Trigger AI clustering
-      const organizeRes = await fetch(`${API}/api/workspace/organize`, { method: 'POST' })
+      const organizeRes = await authenticatedFetch(`${API}/api/workspace/organize`, { method: 'POST' })
 
       // Fetch fresh categorized data
-      const catRes = await fetch(`${API}/api/workspace/categories`)
+      const catRes = await authenticatedFetch(`${API}/api/workspace/categories`)
       if (catRes.ok) {
         const catData = await catRes.json()
         applyCategoriesFromBackend(catData.categories)

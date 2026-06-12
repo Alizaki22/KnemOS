@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { authenticatedFetch } from './auth.store'
 
 export interface ActivityEvent {
   timestamp: number
@@ -42,7 +43,7 @@ export const useActivityStore = create<ActivityState>((set) => ({
 
   fetchTimeline: async (hours = 24) => {
     try {
-      const res = await fetch(`${API}/api/activity/timeline?hours=${hours}&limit=100`)
+      const res = await authenticatedFetch(`${API}/api/activity/timeline?hours=${hours}&limit=100`)
       if (!res.ok) return
       const data = await res.json()
       set({ timeline: data.events || [] })
@@ -51,7 +52,7 @@ export const useActivityStore = create<ActivityState>((set) => ({
 
   fetchCurrentSession: async () => {
     try {
-      const res = await fetch(`${API}/api/sessions/current`)
+      const res = await authenticatedFetch(`${API}/api/sessions/current`)
       if (!res.ok) return
       const data = await res.json()
       set({ currentSession: data })
@@ -60,7 +61,7 @@ export const useActivityStore = create<ActivityState>((set) => ({
 
   fetchSessions: async () => {
     try {
-      const res = await fetch(`${API}/api/sessions/list`)
+      const res = await authenticatedFetch(`${API}/api/sessions/list`)
       if (!res.ok) return
       const data = await res.json()
       set({ sessions: data.sessions || [] })
@@ -68,7 +69,7 @@ export const useActivityStore = create<ActivityState>((set) => ({
   },
 
   logEvent: (type, title, metadata = {}) => {
-    fetch(`${API}/api/activity/log`, {
+    authenticatedFetch(`${API}/api/activity/log`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ event_type: type, title, metadata })

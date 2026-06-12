@@ -1,4 +1,6 @@
 import { create } from 'zustand'
+import { authenticatedFetch } from '../store/auth.store'
+import { useUIStore } from './ui.store'
 
 // Only system-detected category types (workspaces are separate)
 export type CategoryType = 'browsers' | 'apps' | 'tabs' | 'files' | 'processes'
@@ -43,9 +45,11 @@ interface CategoriesState {
   pendingNewItems: PendingItem[]
   manualOverrides: Record<string, CategoryType>
   lastSnapshotTime: number
+  pendingDetectionCache: Set<string>
 
   setCategories: (cats: Record<CategoryType, CategoryItem[]>) => void
   applyCategoriesFromBackend: (data: Record<string, any[]>) => void
+  handleIncomingCategories: (data: Record<string, any[]>) => void
   addPendingNewItems: (items: PendingItem[]) => void
   confirmNewItems: () => void
   discardNewItems: () => void
@@ -68,6 +72,7 @@ export const useCategoriesStore = create<CategoriesState>((set, get) => ({
   pendingNewItems: [],
   manualOverrides: {},
   lastSnapshotTime: 0,
+  pendingDetectionCache: new Set(),
 
   setCategories: (cats) => set({ categories: cats }),
 
@@ -103,6 +108,83 @@ export const useCategoriesStore = create<CategoriesState>((set, get) => ({
     })
     
     set({ categories: cats, lastSnapshotTime: Date.now() })
+  },
+
+  handleIncomingCategories: (data) => {
+    const state = get()
+    const { manualOverrides, pendingDetectionCache, categories } = state
+    
+    const newCats = { ...categories }
+    let hasNewItems = false
+    const newPendingItems: PendingItem[] = []
+    const updatedCache = new Set(pendingDetectionCache)
+
+    // Process each category type
+    const allTypes: CategoryType[] = ['browsers', 'apps', 'tabs', 'files', 'processes']
+    
+    allTypes.forEach((type) => {
+      const incomingItems: any[] = data[type] || []
+      
+      if (type === 'processes') {
+        // Processes auto-sync silently
+        newCats[type] = incomingItems.map((item: any, i: number) => ({
+          id: item.id || `process-${i}-${item.title}`,
+          title: item.title || 'Unknown',
+          source: 'process',
+          categoryType: 'processes',
+          isActive: true,
+          memoryMb: item.memoryMb || item.memory_mb
+        }))
+        return
+      }
+
+      // For other types, check for new meaningful items
+      const currentIds = new Set(newCats[type].map(i => i.id))
+      const pendingIds = new Set(state.pendingNewItems.map(i => i.id))
+
+      incomingItems.forEach((item: any, i: number) => {
+        const id = item.id || `${type}-${i}-${item.title}`
+        
+        // Meaningful checks
+        if (!item.title || item.title.trim() === '') return
+        
+        // Duplication & cache checks
+        if (currentIds.has(id) || pendingIds.has(id) || updatedCache.has(id)) {
+          return // Already tracked or recently dismissed
+        }
+
+        const overrideCategory = manualOverrides[id]
+        const finalCategory = overrideCategory || type
+
+        newPendingItems.push({
+          id,
+          title: item.title,
+          source: item.source || 'window',
+          url: item.url,
+          path: item.path,
+          categoryType: finalCategory,
+          workspaceId: item.workspaceId,
+          isActive: item.isActive !== undefined ? item.isActive : true,
+          memoryMb: item.memoryMb || item.memory_mb,
+          detectedAt: Date.now(),
+          reason: 'New activity detected'
+        })
+        
+        updatedCache.add(id)
+        hasNewItems = true
+      })
+    })
+
+    if (hasNewItems) {
+      useUIStore.getState().setPendingNewItems(true, newPendingItems.length + state.pendingNewItems.length)
+      set({ 
+        categories: newCats, 
+        pendingNewItems: [...state.pendingNewItems, ...newPendingItems],
+        pendingDetectionCache: updatedCache
+      })
+    } else {
+      set({ categories: newCats }) // Update processes silently
+    }
   },
 
   addPendingNewItems: (items) => {
@@ -156,7 +238,7 @@ export const useCategoriesStore = create<CategoriesState>((set, get) => ({
     const newOverrides = { ...manualOverrides }
     pendingMoves.forEach(m => { newOverrides[m.itemId] = m.toCategory })
     set({ pendingMoves: [], manualOverrides: newOverrides })
-    fetch('http://127.0.0.1:8765/api/workspace/organize', { method: 'POST' }).catch(() => {})
+    authenticatedFetch('http://127.0.0.1:8765/api/workspace/organize', { method: 'POST' }).catch(() => {})
   },
 
   discardPendingMoves: () => {

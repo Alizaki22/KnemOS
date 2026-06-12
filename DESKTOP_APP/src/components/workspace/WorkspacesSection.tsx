@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useWorkspaceStore, UserWorkspace, WorkspaceItem } from '../../store/workspace.store'
+import { WorkspacePreviewModal } from './WorkspacePreviewModal'
+import { AISuggestionsModal } from './AISuggestionsModal'
 
 interface Props {
   onDragItem: WorkspaceItem | null
@@ -7,12 +9,14 @@ interface Props {
 }
 
 export const WorkspacesSection = ({ onDragItem, onDropOnWorkspace }: Props) => {
-  const { workspaces, createWorkspace, renameWorkspace, deleteWorkspace, setFocusWorkspace, focusWorkspaceId } = useWorkspaceStore()
+  const { workspaces, createWorkspace, renameWorkspace, deleteWorkspace, focusWorkspaceId } = useWorkspaceStore()
   const [newWorkspaceName, setNewWorkspaceName] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState('')
   const [dragOverId, setDragOverId] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
+  const [previewWorkspaceId, setPreviewWorkspaceId] = useState<string | null>(null)
+  const [showSuggestions, setShowSuggestions] = useState(false)
 
   const handleCreate = async () => {
     const name = newWorkspaceName.trim()
@@ -51,6 +55,18 @@ export const WorkspacesSection = ({ onDragItem, onDropOnWorkspace }: Props) => {
           ◇ — Workspaces
         </div>
         <div className="section-line" />
+        
+        <button 
+          onClick={() => setShowSuggestions(true)}
+          style={{
+            padding: '4px 10px', fontSize: 9, fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase',
+            background: 'var(--accent-light)', color: 'var(--accent)', border: '1px solid var(--accent)',
+            borderRadius: 20, cursor: 'pointer', transition: 'all 0.2s', marginRight: 12
+          }}
+        >
+          AI Suggestions
+        </button>
+
         <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: 1, color: 'var(--ink-4)', textTransform: 'uppercase' }}>
           {workspaces.length} defined
         </div>
@@ -73,12 +89,12 @@ export const WorkspacesSection = ({ onDragItem, onDropOnWorkspace }: Props) => {
               setEditingName(ws.name)
             }}
             onDelete={() => deleteWorkspace(ws.id)}
-            onFocus={() => setFocusWorkspace(focusWorkspaceId === ws.id ? null : ws.id)}
             isEditing={editingId === ws.id}
             editingName={editingName}
             onEditNameChange={setEditingName}
             onEditSubmit={() => handleRenameSubmit(ws.id)}
             onEditCancel={() => setEditingId(null)}
+            onPreview={() => setPreviewWorkspaceId(ws.id)}
           />
         ))}
 
@@ -139,6 +155,17 @@ export const WorkspacesSection = ({ onDragItem, onDropOnWorkspace }: Props) => {
           </div>
         </div>
       </div>
+
+      {previewWorkspaceId && (
+        <WorkspacePreviewModal 
+          workspaceId={previewWorkspaceId} 
+          onClose={() => setPreviewWorkspaceId(null)} 
+        />
+      )}
+
+      {showSuggestions && (
+        <AISuggestionsModal onClose={() => setShowSuggestions(false)} />
+      )}
     </div>
   )
 }
@@ -156,7 +183,7 @@ interface WorkspaceCardProps {
   onDrop: () => void
   onEdit: () => void
   onDelete: () => void
-  onFocus: () => void
+  onPreview: () => void
   onEditNameChange: (name: string) => void
   onEditSubmit: () => void
   onEditCancel: () => void
@@ -164,7 +191,7 @@ interface WorkspaceCardProps {
 
 const WorkspaceCard = ({
   workspace, isFocused, isDragOver, isDragging, isEditing, editingName,
-  onDragOver, onDragLeave, onDrop, onEdit, onDelete, onFocus,
+  onDragOver, onDragLeave, onDrop, onEdit, onDelete, onPreview,
   onEditNameChange, onEditSubmit, onEditCancel
 }: WorkspaceCardProps) => {
   const itemCount = workspace.items.length
@@ -216,8 +243,9 @@ const WorkspaceCard = ({
             <span
               className="category-card-title"
               onDoubleClick={onEdit}
-              title="Double-click to rename"
-              style={{ color: isFocused ? 'var(--accent)' : undefined }}
+              onClick={onPreview}
+              title="Click to preview, double-click to rename"
+              style={{ color: isFocused ? 'var(--accent)' : undefined, cursor: 'pointer' }}
             >
               {workspace.name}
             </span>
@@ -265,32 +293,13 @@ const WorkspaceCard = ({
         )}
       </div>
 
-      {/* Footer actions */}
       <div style={{
         display: 'flex',
         gap: 4,
         padding: '8px 14px',
         borderTop: '1px solid var(--border)',
+        justifyContent: 'flex-end'
       }}>
-        <button
-          onClick={onFocus}
-          style={{
-            flex: 1,
-            fontSize: 9,
-            fontWeight: 700,
-            letterSpacing: 1,
-            textTransform: 'uppercase',
-            padding: '5px 0',
-            background: isFocused ? 'var(--ink)' : 'transparent',
-            color: isFocused ? '#fff' : 'var(--ink-3)',
-            border: isFocused ? 'none' : '1px solid var(--border)',
-            borderRadius: 'var(--r-sm)',
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-          }}
-        >
-          {isFocused ? 'Focused' : 'Focus'}
-        </button>
         <button
           onClick={onEdit}
           style={{

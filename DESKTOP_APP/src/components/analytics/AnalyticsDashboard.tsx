@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { toast } from 'react-hot-toast'
+import { save } from '@tauri-apps/plugin-dialog'
+import { writeTextFile } from '@tauri-apps/plugin-fs'
 import { useSystemStore } from '../../store/system.store'
 import { useCategoriesStore } from '../../store/categories.store'
 import { useWorkspaceStore } from '../../store/workspace.store'
@@ -384,14 +386,26 @@ const TimelineTab = ({ timeline }: any) => (
 // Tab: Export / Charts
 // ───────────────────────────────────────
 const ExportTab = ({ categories, ramStats, focusScore, workspaces }: any) => {
-  const handleExport = () => {
+  const handleExport = async () => {
     const data = JSON.stringify({ categories, ramStats, focusScore, workspaces, exportedAt: new Date().toISOString() }, null, 2)
     const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
 
     if (isTauri) {
-      navigator.clipboard.writeText(data)
-        .then(() => toast.success('Export data copied to clipboard!'))
-        .catch(() => toast.error('Failed to copy to clipboard.'))
+      try {
+        const filePath = await save({
+          filters: [{ name: 'JSON', extensions: ['json'] }],
+          defaultPath: `knemos-export-${Date.now()}.json`,
+        })
+        if (filePath) {
+          await writeTextFile(filePath, data)
+          toast.success('Export saved successfully!')
+        }
+      } catch (err) {
+        console.error('Tauri save failed, falling back to clipboard:', err)
+        navigator.clipboard.writeText(data)
+          .then(() => toast.success('Export data copied to clipboard!'))
+          .catch(() => toast.error('Failed to copy to clipboard.'))
+      }
     } else {
       const blob = new Blob([data], { type: 'application/json' })
       const url = URL.createObjectURL(blob)

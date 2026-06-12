@@ -1,14 +1,11 @@
 import { CategoryItem, CategoryType, CATEGORY_META } from '../../store/categories.store'
 import { useUIStore } from '../../store/ui.store'
+import { HoverTooltip } from '../system/HoverTooltip'
 
 interface Props {
   categoryType: CategoryType
   items: CategoryItem[]
   onDragStart: (item: CategoryItem) => void
-  onDrop: (to: CategoryType) => void
-  isDragOver: boolean
-  onDragOver: (e: React.DragEvent, to: CategoryType) => void
-  onDragLeave: () => void
 }
 
 // Items threshold: compact = <=7, expanded = >7
@@ -23,18 +20,13 @@ const SOURCE_SYMBOL: Record<string, string> = {
 }
 
 // Compact card (<=7 items) — iOS small folder style
-const CompactCard = ({ categoryType, items, onDragStart, onDrop, isDragOver, onDragOver, onDragLeave }: Props) => {
+const CompactCard = ({ categoryType, items, onDragStart }: Props) => {
   const { setActiveCategoryModal } = useUIStore()
   const meta = CATEGORY_META[categoryType]
   const displayItems = items.slice(0, 9)
 
   return (
-    <div
-      className={`category-card compact-card ${isDragOver ? 'drag-over' : ''}`}
-      onDragOver={(e) => { e.preventDefault(); onDragOver(e, categoryType) }}
-      onDrop={() => onDrop(categoryType)}
-      onDragLeave={onDragLeave}
-    >
+    <div className="category-card compact-card">
       {/* Header */}
       <div
         className="category-card-header"
@@ -56,25 +48,35 @@ const CompactCard = ({ categoryType, items, onDragStart, onDrop, isDragOver, onD
         ) : (
           <div className="compact-icon-grid">
             {displayItems.map((item) => (
-              <div
-                key={item.id}
-                className="compact-icon-item"
-                draggable
-                onDragStart={(e) => {
-                  e.dataTransfer.setData('text/plain', item.id)
-                  onDragStart(item)
-                }}
-                title={item.title}
-              >
-                <div className="compact-icon-bubble">
-                  {SOURCE_SYMBOL[item.source] || '+'}
+              <HoverTooltip key={item.id} item={item}>
+                <div
+                  className="compact-icon-item"
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData('text/plain', item.id)
+                    onDragStart(item)
+                  }}
+                  title={item.title}
+                >
+                  <div className="compact-icon-bubble">
+                    {item.source === 'browser_tab' && item.url ? (
+                      <img 
+                        src={`https://www.google.com/s2/favicons?domain=${new URL(item.url).hostname}`} 
+                        alt=""
+                        style={{ width: 16, height: 16, opacity: 0.8 }}
+                        onError={(e) => { e.currentTarget.style.display = 'none' }}
+                      />
+                    ) : (
+                      SOURCE_SYMBOL[item.source] || '+'
+                    )}
+                  </div>
+                  <span className="compact-icon-label">
+                    {item.title.length > 10
+                      ? item.title.slice(0, 9) + '...'
+                      : item.title}
+                  </span>
                 </div>
-                <span className="compact-icon-label">
-                  {item.title.length > 10
-                    ? item.title.slice(0, 9) + '...'
-                    : item.title}
-                </span>
-              </div>
+              </HoverTooltip>
             ))}
             {items.length > 9 && (
               <div
@@ -96,18 +98,13 @@ const CompactCard = ({ categoryType, items, onDragStart, onDrop, isDragOver, onD
 }
 
 // Expanded card (>7 items) — iOS large folder / dense list
-const ExpandedCard = ({ categoryType, items, onDragStart, onDrop, isDragOver, onDragOver, onDragLeave }: Props) => {
+const ExpandedCard = ({ categoryType, items, onDragStart }: Props) => {
   const { setActiveCategoryModal } = useUIStore()
   const meta = CATEGORY_META[categoryType]
   const displayItems = items.slice(0, 12)
 
   return (
-    <div
-      className={`category-card expanded-card ${isDragOver ? 'drag-over' : ''}`}
-      onDragOver={(e) => { e.preventDefault(); onDragOver(e, categoryType) }}
-      onDrop={() => onDrop(categoryType)}
-      onDragLeave={onDragLeave}
-    >
+    <div className="category-card expanded-card">
       {/* Header */}
       <div
         className="category-card-header"
@@ -129,26 +126,36 @@ const ExpandedCard = ({ categoryType, items, onDragStart, onDrop, isDragOver, on
             </div>
           ) : (
             displayItems.map((item) => (
-              <div
-                key={item.id}
-                className="expanded-item-row"
-                draggable
-                onDragStart={(e) => {
-                  e.dataTransfer.setData('text/plain', item.id)
-                  onDragStart(item)
-                }}
-                title={item.title}
-              >
-                <span className="expanded-item-symbol">
-                  {SOURCE_SYMBOL[item.source] || '+'}
-                </span>
-                <span className="expanded-item-title">{item.title}</span>
-                {item.isActive && (
-                  <span className="expanded-item-meta" style={{ color: 'var(--accent)', fontSize: 9 }}>
-                    live
+              <HoverTooltip key={item.id} item={item}>
+                <div
+                  className="expanded-item-row"
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData('text/plain', item.id)
+                    onDragStart(item)
+                  }}
+                  title={item.title}
+                >
+                  <span className="expanded-item-symbol">
+                    {item.source === 'browser_tab' && item.url ? (
+                      <img 
+                        src={`https://www.google.com/s2/favicons?domain=${new URL(item.url).hostname}`} 
+                        alt=""
+                        style={{ width: 12, height: 12, opacity: 0.8 }}
+                        onError={(e) => { e.currentTarget.style.display = 'none' }}
+                      />
+                    ) : (
+                      SOURCE_SYMBOL[item.source] || '+'
+                    )}
                   </span>
-                )}
-              </div>
+                  <span className="expanded-item-title">{item.title}</span>
+                  {item.isActive && (
+                    <span className="expanded-item-meta" style={{ color: 'var(--accent)', fontSize: 9 }}>
+                      live
+                    </span>
+                  )}
+                </div>
+              </HoverTooltip>
             ))
           )}
         </div>

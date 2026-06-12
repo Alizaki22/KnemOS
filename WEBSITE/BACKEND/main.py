@@ -11,7 +11,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from routers import workspace, memory, analytics, system, chat, activity, sessions, focus
 from scheduler import start_scheduler
+from services.auth import init_auth, verify_token
 import uvicorn
+from fastapi import Depends
 
 
 class ConnectionManager:
@@ -52,6 +54,7 @@ import asyncio
 async def lifespan(app: FastAPI):
     # Startup
     print("[KnemOS] Backend v2.0 starting up...")
+    init_auth()
     start_scheduler(manager)
     print("[KnemOS] Ready at http://127.0.0.1:8765")
     try:
@@ -87,20 +90,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Routers
-app.include_router(workspace.router, prefix="/api/workspace", tags=["workspace"])
-app.include_router(memory.router,    prefix="/api/memory",    tags=["memory"])
-app.include_router(analytics.router, prefix="/api/analytics", tags=["analytics"])
+# Routers (Protected)
+protected = [Depends(verify_token)]
+app.include_router(workspace.router, prefix="/api/workspace", tags=["workspace"], dependencies=protected)
+app.include_router(memory.router,    prefix="/api/memory",    tags=["memory"], dependencies=protected)
+app.include_router(analytics.router, prefix="/api/analytics", tags=["analytics"], dependencies=protected)
+app.include_router(chat.router,      prefix="/api/chat",      tags=["chat"], dependencies=protected)
+app.include_router(activity.router,  prefix="/api/activity",  tags=["activity"], dependencies=protected)
+app.include_router(sessions.router,  prefix="/api/sessions",  tags=["sessions"], dependencies=protected)
+app.include_router(focus.router,     prefix="/api/focus",     tags=["focus"], dependencies=protected)
+
+# System Router (Unprotected for extension tabs + health check)
 app.include_router(system.router,    prefix="/api/system",    tags=["system"])
-app.include_router(chat.router,      prefix="/api/chat",      tags=["chat"])
-app.include_router(activity.router,  prefix="/api/activity",  tags=["activity"])
-app.include_router(sessions.router,  prefix="/api/sessions",  tags=["sessions"])
-app.include_router(focus.router,     prefix="/api/focus",     tags=["focus"])
 
 
 # WebSocket
 @app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(websocket: WebSocket, token: str = None):
+    # WS Auth
+    from services.auth import get_current_token
+    if get_current_token() and token != get_current_token():
+        await websocket.close(code=1008, reason="Unauthorized local IPC connection")
+        return
+
     await manager.connect(websocket)
     try:
         while True:

@@ -112,6 +112,37 @@ async def _restore_windows():
     _focus_state["minimized_hwnds"] = []
     return restored
 
+def enforce_focus():
+    """Watchdog function to auto-minimize unrelated windows while focus is active."""
+    if not _focus_state["active"]:
+        return
+        
+    protected = _focus_state["protected_titles"]
+    newly_minimized = []
+
+    def enum_minimize(hwnd, _):
+        if not win32gui.IsWindowVisible(hwnd):
+            return
+        title = win32gui.GetWindowText(hwnd).strip()
+        if not title:
+            return
+        is_protected = any(pt.lower() in title.lower() for pt in protected if pt)
+        if not is_protected:
+            try:
+                # If window isn't already minimized
+                tup = win32gui.GetWindowPlacement(hwnd)
+                if tup[1] != win32con.SW_SHOWMINIMIZED:
+                    win32gui.ShowWindow(hwnd, win32con.SW_MINIMIZE)
+                    newly_minimized.append(hwnd)
+                    if hwnd not in _focus_state["minimized_hwnds"]:
+                        _focus_state["minimized_hwnds"].append(hwnd)
+            except Exception:
+                pass
+
+    try:
+        win32gui.EnumWindows(enum_minimize, None)
+    except Exception as e:
+        print(f"[Focus Watchdog] Error: {e}")
 
 @router.post("/deactivate")
 async def deactivate_focus():

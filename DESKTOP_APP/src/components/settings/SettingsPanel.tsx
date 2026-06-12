@@ -1,16 +1,25 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { authenticatedFetch } from '../../store/auth.store'
 import { useSettingsStore, ACCENTS, AccentColor, OllamaModel } from '../../store/settings.store'
 
 export const SettingsPanel = () => {
-  const { accent, model, setAccent, setModel } = useSettingsStore()
+  const { accent, model, isInverted, setAccent, setModel, setInverted } = useSettingsStore()
   const [backendStatus, setBackendStatus] = useState<'idle' | 'ok' | 'fail'>('idle')
   const [ollamaStatus, setOllamaStatus] = useState<'idle' | 'ok' | 'missing' | 'fail'>('idle')
   const [extensionStatus, setExtensionStatus] = useState<'idle' | 'ok' | 'fail'>('idle')
+  const [resources, setResources] = useState<any>(null)
+
+  useEffect(() => {
+    authenticatedFetch('http://127.0.0.1:8765/api/system/resources')
+      .then(r => r.json())
+      .then(data => setResources(data))
+      .catch(() => {})
+  }, [])
 
   const handleTestBackend = async () => {
     setBackendStatus('idle')
     try {
-      const res = await fetch('http://127.0.0.1:8765/api/system/health', { signal: AbortSignal.timeout(3000) })
+      const res = await authenticatedFetch('http://127.0.0.1:8765/api/system/health', { signal: AbortSignal.timeout(3000) })
       setBackendStatus(res.ok ? 'ok' : 'fail')
     } catch {
       setBackendStatus('fail')
@@ -20,7 +29,7 @@ export const SettingsPanel = () => {
   const handleTestOllama = async () => {
     setOllamaStatus('idle')
     try {
-      const res = await fetch('http://127.0.0.1:8765/api/chat/status', { signal: AbortSignal.timeout(5000) })
+      const res = await authenticatedFetch('http://127.0.0.1:8765/api/chat/status', { signal: AbortSignal.timeout(5000) })
       if (res.ok) {
         const data = await res.json()
         if (data.ollama_running && data.model_available) setOllamaStatus('ok')
@@ -37,7 +46,7 @@ export const SettingsPanel = () => {
   const handleTestExtension = async () => {
     setExtensionStatus('idle')
     try {
-      const res = await fetch('http://127.0.0.1:8765/api/system/health', { signal: AbortSignal.timeout(2000) })
+      const res = await authenticatedFetch('http://127.0.0.1:8765/api/system/health', { signal: AbortSignal.timeout(2000) })
       // If backend is up, extension might be sending data
       setExtensionStatus(res.ok ? 'ok' : 'fail')
     } catch {
@@ -101,12 +110,26 @@ export const SettingsPanel = () => {
 
         <div className="settings-row">
           <div>
-            <div className="settings-row-label">Theme</div>
-            <div className="settings-row-desc">KnemOS uses a warm-white Minimal design. Dark mode is not available.</div>
+            <div className="settings-row-label">Theme Mode</div>
+            <div className="settings-row-desc">Toggle between Minimal White and Pure Inverted (Monochrome Color Background).</div>
           </div>
-          <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: 1, textTransform: 'uppercase' }}>
-            Minimal White
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--ink-3)' }}>Minimal White</span>
+            <div 
+              style={{
+                width: 36, height: 20, borderRadius: 10, background: isInverted ? 'var(--accent)' : 'var(--border)',
+                position: 'relative', cursor: 'pointer', transition: 'background 0.2s'
+              }}
+              onClick={() => setInverted(!isInverted)}
+            >
+              <div style={{
+                position: 'absolute', top: 2, left: isInverted ? 18 : 2,
+                width: 16, height: 16, borderRadius: '50%', background: '#fff',
+                transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+              }} />
+            </div>
+            <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--ink-3)' }}>Inverted</span>
+          </div>
         </div>
       </div>
 
@@ -163,6 +186,11 @@ export const SettingsPanel = () => {
           <div>
             <div className="settings-row-label">Screenshot Retention</div>
             <div className="settings-row-desc">Screenshots older than 48 hours are automatically deleted. Max 100 stored.</div>
+            {resources && (
+              <div style={{ fontSize: 9, color: 'var(--ink-4)', marginTop: 4, fontFamily: 'var(--font-mono)' }}>
+                {resources.screenshots_path} ({resources.screenshots_mb} MB)
+              </div>
+            )}
           </div>
           <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: 1, textTransform: 'uppercase' }}>
             48h / 100 max
@@ -174,9 +202,16 @@ export const SettingsPanel = () => {
             <div className="settings-row-label">Semantic Memory (ChromaDB)</div>
             <div className="settings-row-desc">Vector database uses v2 collection (1024-dim). Auto-versioned to prevent conflicts.</div>
           </div>
-          <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--accent)', letterSpacing: 1, textTransform: 'uppercase' }}>
-            v2 Active
-          </span>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+            <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--accent)', letterSpacing: 1, textTransform: 'uppercase' }}>
+              v2 Active
+            </span>
+            {resources && (
+              <span style={{ fontSize: 9, color: 'var(--ink-4)', fontFamily: 'var(--font-mono)' }}>
+                {resources.chromadb_mb} MB Vector / {resources.sqlite_mb} MB SQLite
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
