@@ -23,7 +23,7 @@ export const TitleBar = () => {
   const handleMax = () => appWindow?.toggleMaximize()
 
   return (
-    <div className="titlebar" data-tauri-drag-region>
+    <div className="titlebar">
       <div className="titlebar-left" data-tauri-drag-region>
         <div className="titlebar-logo" data-tauri-drag-region>
           <span className="titlebar-logo-text" data-tauri-drag-region>KNEMOS</span>

@@ -1,27 +1,32 @@
-﻿# backend/routers/workspace.py
+# backend/routers/workspace.py
 """
 Workspace endpoints:
-  POST /api/workspace/organize    full AI clustering pipeline
-  GET  /api/workspace/list        cached workspace list from SQLite
-  POST /api/workspace/restore/{id}  focus windows for a workspace
+  POST /api/workspace/organize     — full AI clustering pipeline
+  GET  /api/workspace/list         — cached workspace list from SQLite
+  GET  /api/workspace/categories   — live categorized items (browsers/apps/tabs/files/processes)
+  POST /api/workspace/restore/{id} — focus windows for a workspace
+  POST /api/workspace/save         — save user-defined workspace
 """
 import sqlite3
 import json
 import time
 import uuid
 from fastapi import APIRouter
-from services.data_collector import get_open_windows, get_browser_tabs
+from pydantic import BaseModel
+from typing import Optional
+from services.data_collector import get_open_windows, get_browser_tabs, get_all_items_categorized
 from services.embedder import embedder
 from services.clusterer import cluster_items
 from services.workspace_namer import name_cluster
 from services.wolfram_analytics import log_workspace_switch
 from services.event_manager import event_bus
+from services.memory_indexer import log_activity_event
 
 router = APIRouter()
 
 DB_PATH = "./data/knemos.db"
 
-#  SQLite workspace table 
+# SQLite workspace tables
 def _init_db():
     conn = sqlite3.connect(DB_PATH)
     conn.execute("""
@@ -30,7 +35,17 @@ def _init_db():
             name        TEXT,
             item_count  INTEGER,
             items_json  TEXT,
-            created_at  INTEGER
+            created_at  INTEGER,
+            is_user_defined INTEGER DEFAULT 0
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS user_workspaces (
+            id          TEXT PRIMARY KEY,
+            name        TEXT,
+            items_json  TEXT,
+            created_at  INTEGER,
+            is_pinned   INTEGER DEFAULT 0
         )
     """)
     conn.commit()
@@ -38,18 +53,21 @@ def _init_db():
 
 _init_db()
 
-# In-memory cache for the last organize result
+# In-memory cache
 _cache: dict = {"workspaces": [], "updated_at": 0}
 
 
+class UserWorkspace(BaseModel):
+    name: str
+    items: Optional[list] = []
+
+
 def _save_workspaces_to_db(workspaces: list[dict]):
-    """Persist workspace metadata in SQLite. ChromaDB holds only vectors."""
     conn = sqlite3.connect(DB_PATH)
-    # Clear old workspaces and insert fresh set
-    conn.execute("DELETE FROM workspaces")
+    conn.execute("DELETE FROM workspaces WHERE is_user_defined = 0")
     for ws in workspaces:
         conn.execute(
-            "INSERT INTO workspaces (id, name, item_count, items_json, created_at) VALUES (?, ?, ?, ?, ?)",
+            "INSERT OR REPLACE INTO workspaces (id, name, item_count, items_json, created_at, is_user_defined) VALUES (?, ?, ?, ?, ?, 0)",
             (ws["id"], ws["name"], ws["item_count"], json.dumps(ws["items"]), ws["created_at"])
         )
     conn.commit()
@@ -57,7 +75,6 @@ def _save_workspaces_to_db(workspaces: list[dict]):
 
 
 def _load_workspaces_from_db() -> list[dict]:
-    """Load workspace metadata from SQLite."""
     try:
         conn = sqlite3.connect(DB_PATH)
         rows = conn.execute(
@@ -78,16 +95,31 @@ def _load_workspaces_from_db() -> list[dict]:
         return []
 
 
+def _load_user_workspaces() -> list[dict]:
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        rows = conn.execute(
+            "SELECT id, name, items_json, created_at, is_pinned FROM user_workspaces ORDER BY is_pinned DESC, created_at ASC"
+        ).fetchall()
+        conn.close()
+        return [
+            {
+                "id": r[0],
+                "name": r[1],
+                "items": json.loads(r[2]) if r[2] else [],
+                "created_at": r[3],
+                "is_pinned": bool(r[4]),
+                "is_user_defined": True
+            }
+            for r in rows
+        ]
+    except Exception:
+        return []
+
+
 @router.post("/organize")
 async def organize():
-    """
-    Full pipeline:
-      1. Collect open windows + browser tabs
-      2. Embed with mxbai-embed-large
-      3. Cluster with HDBSCAN
-      4. Name clusters with Qwen2.5 (3s timeout  fallback)
-      5. Persist to SQLite, emit event
-    """
+    """Full AI clustering pipeline."""
     windows = get_open_windows()
     tabs = get_browser_tabs()
     all_items = windows + tabs
@@ -99,19 +131,14 @@ async def organize():
             "clusters_found": 0
         }
 
-    # Embed
     texts = [item.title for item in all_items]
     embeddings = embedder.embed_texts(texts)
-
-    # Cluster
     labels = cluster_items(embeddings)
 
-    # Group by cluster label
     clusters: dict[int, list] = {}
     for item, label in zip(all_items, labels):
         clusters.setdefault(label, []).append(item)
 
-    # Name each cluster
     workspaces = []
     for label, items in clusters.items():
         ws_name = name_cluster([i.title for i in items])
@@ -125,15 +152,14 @@ async def organize():
         workspaces.append(ws)
         log_workspace_switch(ws_name)
 
-    # Sort by size descending
     workspaces.sort(key=lambda x: x["item_count"], reverse=True)
 
-    # Update cache and persist
     _cache["workspaces"] = workspaces
     _cache["updated_at"] = int(time.time())
     _save_workspaces_to_db(workspaces)
 
-    # Emit event for WebSocket broadcast (wired in main.py)
+    log_activity_event("organize", f"Clustered {len(all_items)} items into {len(workspaces)} workspaces")
+
     await event_bus.emit("workspaces_updated", workspaces)
 
     return {
@@ -145,27 +171,89 @@ async def organize():
 
 @router.get("/list")
 async def list_workspaces():
-    """Return cached workspaces. Falls back to SQLite if cache is empty."""
+    """Return AI-clustered workspaces."""
     if _cache["workspaces"]:
         return {"workspaces": _cache["workspaces"]}
     return {"workspaces": _load_workspaces_from_db()}
 
 
+@router.get("/categories")
+async def get_categories():
+    """
+    Return all live system items categorized by type.
+    This is the source of truth for the home screen categories.
+    """
+    categories = get_all_items_categorized()
+    return {
+        "categories": categories,
+        "timestamp": int(time.time())
+    }
+
+
+@router.get("/user-workspaces")
+async def get_user_workspaces():
+    """Return user-defined workspaces."""
+    return {"workspaces": _load_user_workspaces()}
+
+
+@router.post("/user-workspaces")
+async def create_user_workspace(ws: UserWorkspace):
+    """Create a new user-defined workspace."""
+    ws_id = str(uuid.uuid4())
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        conn.execute(
+            "INSERT INTO user_workspaces (id, name, items_json, created_at) VALUES (?, ?, ?, ?)",
+            (ws_id, ws.name, json.dumps(ws.items), int(time.time()))
+        )
+        conn.commit()
+        conn.close()
+        log_activity_event("workspace_created", ws.name, {"id": ws_id})
+        return {"status": "created", "id": ws_id, "name": ws.name}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+@router.put("/user-workspaces/{ws_id}")
+async def update_user_workspace(ws_id: str, ws: UserWorkspace):
+    """Update workspace name or items."""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        conn.execute(
+            "UPDATE user_workspaces SET name = ?, items_json = ? WHERE id = ?",
+            (ws.name, json.dumps(ws.items), ws_id)
+        )
+        conn.commit()
+        conn.close()
+        return {"status": "updated"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+@router.delete("/user-workspaces/{ws_id}")
+async def delete_user_workspace(ws_id: str):
+    """Delete a user workspace."""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        conn.execute("DELETE FROM user_workspaces WHERE id = ?", (ws_id,))
+        conn.commit()
+        conn.close()
+        return {"status": "deleted"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
 @router.post("/restore/{workspace_id}")
 async def restore(workspace_id: str):
-    """
-    Restore (focus) a saved workspace.
-    Full window focus implementation can use pywin32 SetForegroundWindow.
-    For MVP: returns status and the workspace items for UI to act on.
-    """
+    """Restore (focus) a saved workspace."""
     workspaces = _cache["workspaces"] or _load_workspaces_from_db()
     target = next((ws for ws in workspaces if ws["id"] == workspace_id), None)
 
     if not target:
         return {"status": "not_found", "workspace_id": workspace_id}
 
-    # Log the restore as a switch event
     log_workspace_switch(target["name"])
+    log_activity_event("workspace_restored", target["name"], {"workspace_id": workspace_id})
 
     return {
         "status": "restored",
@@ -173,3 +261,11 @@ async def restore(workspace_id: str):
         "workspace_name": target["name"],
         "items": target["items"]
     }
+
+
+@router.post("/focus")
+async def focus_workspace(body: dict):
+    """Mark a workspace as the focus target — triggers backend minimize."""
+    workspace_name = body.get("workspace_name", "")
+    log_activity_event("workspace_focus", workspace_name)
+    return {"status": "ok"}

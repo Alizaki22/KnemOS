@@ -6,14 +6,10 @@ import { AnalyticsPanel } from '../analytics/AnalyticsDashboard'
 import { SettingsPanel } from '../settings/SettingsPanel'
 import { PendingChangesOverlay } from '../dnd/PendingChangesOverlay'
 import { DeepWorkOverlay } from '../system/DeepWorkOverlay'
-import { useFocusAutomation } from '../../hooks/useFocusAutomation'
 
 export const MainArea = () => {
   const { activePanel, pendingChanges, deepWorkActive } = useUIStore()
   const { hasPendingChanges } = useCategoriesStore()
-
-  // Initialize focus automation hook
-  useFocusAutomation()
 
   const renderPanel = () => {
     switch (activePanel) {
@@ -26,23 +22,16 @@ export const MainArea = () => {
   }
 
   return (
-    <div className="main-content relative">
-      {/* Dynamic Header for Categories panel only (others have their own) */}
-      {activePanel === 'categories' && (
-        <div className="section-header fade-in-section visible">
-          <div className="section-title">Workspace</div>
-          <div className="section-line" />
-          <div className="section-subtitle">□ — semantic organization</div>
-        </div>
-      )}
-
-      {/* Main panel content with simple fade */}
+    <div className="main-content">
+      {/* Main panel content */}
       <div key={activePanel} className="fade-in-section visible" style={{ height: activePanel === 'chat' ? '100%' : 'auto' }}>
         {renderPanel()}
       </div>
 
-      {/* Overlays */}
+      {/* Drag-and-drop pending changes overlay */}
       {(pendingChanges || hasPendingChanges()) && <PendingChangesOverlay />}
+
+      {/* Deep Focus mode overlay */}
       {deepWorkActive && <DeepWorkOverlay />}
     </div>
   )

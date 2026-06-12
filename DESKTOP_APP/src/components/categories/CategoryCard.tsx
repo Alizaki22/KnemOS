@@ -60,7 +60,10 @@ const CompactCard = ({ categoryType, items, onDragStart, onDrop, isDragOver, onD
                 key={item.id}
                 className="compact-icon-item"
                 draggable
-                onDragStart={() => onDragStart(item)}
+                onDragStart={(e) => {
+                  e.dataTransfer.setData('text/plain', item.id)
+                  onDragStart(item)
+                }}
                 title={item.title}
               >
                 <div className="compact-icon-bubble">
@@ -130,7 +133,10 @@ const ExpandedCard = ({ categoryType, items, onDragStart, onDrop, isDragOver, on
                 key={item.id}
                 className="expanded-item-row"
                 draggable
-                onDragStart={() => onDragStart(item)}
+                onDragStart={(e) => {
+                  e.dataTransfer.setData('text/plain', item.id)
+                  onDragStart(item)
+                }}
                 title={item.title}
               >
                 <span className="expanded-item-symbol">

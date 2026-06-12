@@ -6,6 +6,7 @@ export interface RAMStats {
   available_gb: number;
   percent: number;
   saved_gb: number;
+  cpu_percent?: number;
 }
 
 export interface FocusScore {

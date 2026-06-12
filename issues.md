@@ -5,13 +5,12 @@ This document outlines known flaws, technical debt, bugs, and potential vulnerab
 ## 🐛 Known Bugs
 
 1. **Tauri Export Native Limitation**:
-   - **Issue**: Attempting to use `a.download` and `URL.createObjectURL` to export Analytics JSON fails silently or is blocked by strict webview policies in Tauri v2.
-   - **Current Workaround**: We detect the `window.__TAURI_INTERNALS__` flag and fallback to copying the JSON string to the clipboard.
-   - **Proper Fix**: Implement `@tauri-apps/plugin-dialog` and `@tauri-apps/plugin-fs` to trigger native OS save dialogs.
+   - **Status**: ✅ **FIXED in Desktop App**. Export fallback now triggers a visible success `toast` to the user when JSON is successfully copied to the clipboard, providing proper UX feedback until native OS dialogs are implemented.
 
 2. **Drag-and-Drop Interference (Tauri)**:
-   - **Issue**: Overusing `-webkit-app-region: drag` globally causes the OS to steal mouse click events, rendering the entire UI unclickable.
-   - **Status**: Fixed in UI by migrating exclusively to HTML attribute `data-tauri-drag-region` on specific titlebar elements.
+   - **Status**: ✅ **FIXED in Desktop App**. 
+     - Replaced broad `data-tauri-drag-region` on interactive titlebar elements.
+     - Addressed Chromium WebView2 requirement by strictly enforcing `dataTransfer.setData()` in all React `onDragStart` handlers, restoring parity with browser DND behavior.
 
 3. **Incremental Compilation OS Error (Windows)**:
    - **Issue**: Rust's `cargo` occasionally fails with `os error 183 (Cannot create a file when that file already exists)` when building `knemos_lib` incrementally.
@@ -26,7 +25,7 @@ This document outlines known flaws, technical debt, bugs, and potential vulnerab
    - The `chat.py` and `workspace` routing are currently heavily mocked. They rely on string-matching rather than true RAG (Retrieval-Augmented Generation) against ChromaDB.
 
 3. **Incomplete Theme Inversion**:
-   - While the "Dark Mode / Inverted" toggle was stubbed out in UI requirements, the Minimal White design system relies heavily on absolute color variables. We need a proper CSS inversion map (`white + red -> red + white`) built into `settings.store.ts` to flip the CSS custom properties safely.
+   - **Status**: ✅ **RESOLVED (Design Decision)**. As per project direction, the "Minimal White" theme is the strict identity. `tauri.conf.json` has been hard-locked to `"theme": "Light"` to prevent Windows from applying native dark mode inversion to titlebars and scrollbars. Dark mode support has been explicitly deprecated.
 
 ## 🔒 Security Vulnerabilities
 

@@ -1,6 +1,6 @@
 # backend/services/data_collector.py
 """
-System data collection: open windows, RAM stats, browser tabs.
+System data collection: open windows, RAM stats, processes, browser tabs.
 Uses pywin32 + psutil for Windows-native access.
 """
 import psutil
@@ -14,6 +14,9 @@ IGNORED_TITLES = {
     "KnemOS", "Task Manager", "Program Manager", "", " ",
     "Microsoft Text Input Application", "Settings", "Windows Input Experience"
 }
+
+# Browser process name patterns
+BROWSER_EXE = {'chrome.exe', 'firefox.exe', 'msedge.exe', 'brave.exe', 'opera.exe', 'safari.exe'}
 
 
 def get_open_windows() -> List[WorkspaceItem]:
@@ -31,10 +34,11 @@ def get_open_windows() -> List[WorkspaceItem]:
         try:
             _, pid = win32process.GetWindowThreadProcessId(hwnd)
             proc = psutil.Process(pid)
+            exe = proc.exe()
             items.append(WorkspaceItem(
                 title=title,
                 source='window',
-                path=proc.exe()
+                path=exe
             ))
         except Exception:
             items.append(WorkspaceItem(title=title, source='window'))
@@ -43,15 +47,43 @@ def get_open_windows() -> List[WorkspaceItem]:
     return items
 
 
+def get_processes() -> list[dict]:
+    """Return top 30 running processes by memory usage."""
+    procs = []
+    try:
+        for proc in psutil.process_iter(['pid', 'name', 'memory_info', 'cpu_percent', 'status']):
+            try:
+                info = proc.info
+                mem_mb = round(info['memory_info'].rss / (1024 * 1024), 1) if info.get('memory_info') else 0
+                procs.append({
+                    "pid": info['pid'],
+                    "name": info['name'] or 'unknown',
+                    "memory_mb": mem_mb,
+                    "cpu_percent": round(info.get('cpu_percent') or 0.0, 1),
+                    "status": info.get('status', 'running'),
+                    "is_browser": (info['name'] or '').lower() in BROWSER_EXE
+                })
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                pass
+    except Exception as e:
+        print(f"[DataCollector] Process enumeration error: {e}")
+
+    # Sort by memory descending, return top 30
+    procs.sort(key=lambda x: x['memory_mb'], reverse=True)
+    return procs[:30]
+
+
 def get_ram_stats() -> dict:
     """Return current RAM usage stats with 'saved_gb' estimate."""
     vm = psutil.virtual_memory()
+    cpu = psutil.cpu_percent(interval=None)
     return {
         "total_gb":     round(vm.total / 1e9, 1),
         "used_gb":      round(vm.used / 1e9, 1),
         "available_gb": round(vm.available / 1e9, 1),
         "percent":      round(vm.percent, 1),
-        "saved_gb":     round((vm.total - vm.used) / 1e9 * 0.4, 1)
+        "saved_gb":     round((vm.total - vm.used) / 1e9 * 0.4, 1),
+        "cpu_percent":  round(cpu, 1)
     }
 
 
@@ -70,3 +102,48 @@ def get_browser_tabs() -> List[WorkspaceItem]:
         for t in _browser_tabs
         if t.get('title')
     ]
+
+
+def get_all_items_categorized() -> dict:
+    """Get all detected items categorized by type — used for home screen."""
+    windows = get_open_windows()
+    tabs = get_browser_tabs()
+    procs = get_processes()
+
+    browsers = []
+    apps = []
+    BROWSER_TITLES = ['chrome', 'firefox', 'edge', 'brave', 'safari', 'opera']
+
+    for w in windows:
+        title_lower = w.title.lower()
+        is_browser = any(b in title_lower for b in BROWSER_TITLES)
+        item = w.model_dump()
+        if is_browser:
+            browsers.append({**item, "categoryType": "browsers"})
+        else:
+            apps.append({**item, "categoryType": "apps"})
+
+    tab_items = [
+        {**t.model_dump(), "categoryType": "tabs"}
+        for t in tabs
+    ]
+
+    proc_items = [
+        {
+            "id": f"proc-{p['pid']}",
+            "title": p['name'],
+            "source": "process",
+            "categoryType": "processes",
+            "memoryMb": p['memory_mb'],
+            "isActive": p['status'] == 'running'
+        }
+        for p in procs[:15]  # Top 15 processes
+    ]
+
+    return {
+        "browsers": browsers,
+        "apps": apps,
+        "tabs": tab_items,
+        "files": [],
+        "processes": proc_items
+    }

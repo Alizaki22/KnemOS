@@ -1,26 +1,26 @@
-﻿import { motion } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useState } from 'react'
-import { Workspace, useWorkspaceStore } from '../../store/workspace.store'
+import { UserWorkspace, useWorkspaceStore } from '../../store/workspace.store'
 import { WorkspaceItem } from './WorkspaceItem'
 import { useSystemStore } from '../../store/system.store'
 
 interface Props {
-  workspace: Workspace;
+  workspace: UserWorkspace;
 }
 
 export const WorkspaceCard = ({ workspace }: Props) => {
   const [expanded, setExpanded] = useState(false)
-  const { activeWorkspaceId, setActive } = useWorkspaceStore()
+  const { focusWorkspaceId, setFocusWorkspace } = useWorkspaceStore()
   const { deepWorkActive } = useSystemStore()
 
-  const isActive = activeWorkspaceId === workspace.id
+  const isActive = focusWorkspaceId === workspace.id
   
   // In deep work mode, unrelated cards are dimmed out
-  const isDimmed = deepWorkActive && !isActive && activeWorkspaceId !== null
+  const isDimmed = deepWorkActive && !isActive && focusWorkspaceId !== null
 
   const handleRestore = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    setActive(workspace.id)
+    setFocusWorkspace(workspace.id)
     try {
       await fetch(`http://127.0.0.1:8765/api/workspace/restore/${workspace.id}`, {
         method: 'POST'
@@ -45,7 +45,7 @@ export const WorkspaceCard = ({ workspace }: Props) => {
             {workspace.name}
           </h3>
           <p className="text-[10px] text-text-secondary uppercase tracking-widest mt-1">
-            {workspace.item_count} items
+            {workspace.items?.length || 0} items
           </p>
         </div>
         
@@ -66,7 +66,7 @@ export const WorkspaceCard = ({ workspace }: Props) => {
         className="overflow-hidden bg-surface-3/50"
       >
         <div className="p-2 border-t border-border/50">
-          {workspace.items.map((item, idx) => (
+          {workspace.items?.map((item: any, idx: number) => (
             <WorkspaceItem key={`${item.title}-${idx}`} item={item} />
           ))}
         </div>

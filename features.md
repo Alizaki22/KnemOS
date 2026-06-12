@@ -42,7 +42,7 @@ This document outlines all current capabilities of the KnemOS ecosystem and trac
 - [ ] **ChromaDB Vector Store**:
   - Implementing the OCR + Embedding pipeline for screenshots.
 - [ ] **File System Plugins**:
-  - Adding `tauri-plugin-dialog` to natively export and import analytics JSON payloads rather than copying to the clipboard.
+  - Future implementation of `tauri-plugin-dialog` to natively export and import analytics JSON payloads. Currently handled via clipboard copy with `react-hot-toast` UX feedback.
 
 ---
 

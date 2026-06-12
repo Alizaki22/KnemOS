@@ -691,6 +691,12 @@ Output locations:
 **Framer Motion causes layout jank**  
  Ensure any `motion.div` with the `layout` prop has a stable, unique `key` prop. Without a stable `key`, Framer Motion cannot track which element is which between renders and recalculates the entire layout.
 
+**Drag and Drop fails in Tauri but works in browser**  
+ Chromium WebView2 requires `e.dataTransfer.setData('text/plain', ...)` to be explicitly called in the `onDragStart` handler to initiate native drag events. This has been enforced across all category components.
+
+**Window buttons (minimize/close) are unclickable**
+ On Windows, any element or child of an element with `data-tauri-drag-region` will have its mouse events intercepted at the OS level (HTCAPTION). Drag regions must be kept separate from interactive buttons.
+
 ---
 
 *End of Documentation.*  
