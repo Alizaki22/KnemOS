@@ -21,7 +21,7 @@ export const RAMMonitor = () => {
     <div className="border-t border-border p-4 glass-card mx-2 mb-2 rounded-lg">
       <div className="flex items-center justify-between mb-2">
         <p className="text-[10px] text-text-secondary uppercase tracking-widest">RAM Usage</p>
-        <span className="text-xs font-mono font-bold text-white">
+        <span className="text-xs font-mono font-bold text-[var(--ink)]">
           {used_gb.toFixed(1)} / {total_gb.toFixed(1)} GB
         </span>
       </div>

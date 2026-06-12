@@ -10,7 +10,7 @@ export const MemoryResult = ({ result }: Props) => {
   const dateString = date.toLocaleDateString([], { month: 'short', day: 'numeric' })
   
   return (
-    <div className="p-3 mb-2 glass-card rounded-md hover:bg-surface-3 transition-colors group cursor-pointer border border-border hover:border-mint/30">
+    <div className="p-3 mb-2 bg-[var(--bg-panel)] rounded-md hover:bg-[var(--hover-bg)] transition-colors group cursor-pointer border border-[var(--border)] hover:border-mint/30">
       <div className="flex justify-between items-start mb-1.5">
         <span className="text-[10px] text-mint font-mono font-bold uppercase tracking-wider">
           {result.similarity.toFixed(2)} Match

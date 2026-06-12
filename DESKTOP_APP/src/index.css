@@ -15,15 +15,22 @@
   --accent-mid:   rgba(0, 200, 150, 0.18);
 
   /* --- Base Palette (Warm White + Black) --- */
-  --bg:           #F8F7F4;   /* warm white — Gitingest warmth */
-  --bg-panel:     #FFFFFF;   /* card/panel surface */
-  --bg-hover:     #F3F2EF;   /* subtle hover tint */
-  --ink:          #000000;   /* primary text & borders */
-  --ink-2:        #3A3A3A;   /* secondary text */
-  --ink-3:        #7A7A7A;   /* muted / metadata */
-  --ink-4:        #C0C0C0;   /* placeholder / disabled */
-  --border:       rgba(0,0,0,0.10);  /* default hairline */
-  --border-hard:  #000000;            /* strong border */
+  --bg-primary:     #F8F7F4;
+  --bg-secondary:   #FFFFFF;
+  --text-primary:   #000000;
+  --text-secondary: #3A3A3A;
+  --accent-contrast: #FFFFFF;
+  --hover-bg:       #F3F2EF;
+  --hover-text:     #000000;
+  --border:         rgba(0,0,0,0.10);
+  
+  --bg:           var(--bg-primary);
+  --bg-panel:     var(--bg-secondary);
+  --ink:          var(--text-primary);
+  --ink-2:        var(--text-secondary);
+  --ink-3:        #7A7A7A;
+  --ink-4:        #C0C0C0;
+  --border-hard:  #000000;
 
   /* --- Shadows (Gitingest card depth) --- */
   --shadow-sm:  0 1px 4px rgba(0,0,0,0.06);
@@ -61,6 +68,9 @@
 html, body, #root {
   height: 100%;
   overflow: hidden;
+}
+
+.no-select {
   user-select: none;
 }
 
@@ -71,6 +81,8 @@ body {
   color: var(--ink);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
+  user-select: auto;
+  -webkit-user-select: auto;
 }
 
 /* =============================================
@@ -522,7 +534,7 @@ body {
 .compact-icon-item:hover .compact-icon-bubble {
   border-color: var(--ink);
   background: var(--ink);
-  color: #fff;
+  color: var(--bg-panel);
 }
 
 .compact-icon-label {
@@ -714,6 +726,10 @@ body {
 .pending-btn-confirm {
   flex: 1;
   padding: 8px 16px;
+  /* Backgrounds (layered depth) */
+  --color-surface:     var(--bg-primary);
+  --color-surface-2:   var(--bg-secondary);
+  --color-surface-3:   var(--hover-bg);
   background: var(--ink);
   color: #fff;
   border: none;

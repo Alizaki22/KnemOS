@@ -24,6 +24,25 @@ def get_open_windows() -> List[WorkspaceItem]:
     """Enumerate all visible windows using pywin32."""
     items = []
     seen = set()
+    exe_memory = {}
+    pid_info = {}
+    for proc in psutil.process_iter(['pid', 'name', 'exe', 'memory_info']):
+        try:
+            info = proc.info
+            name = (info.get('name') or '').lower()
+            exe_path = info.get('exe') or ''
+            
+            if name:
+                mem_mb = round(info['memory_info'].rss / (1024 * 1024), 1) if info.get('memory_info') else 0
+                exe_memory[name] = exe_memory.get(name, 0) + mem_mb
+            
+            if info.get('pid'):
+                pid_info[info['pid']] = {
+                    'name': name,
+                    'exe': exe_path
+                }
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            pass
 
     def enum_handler(hwnd, _):
         if not win32gui.IsWindowVisible(hwnd):
@@ -34,12 +53,19 @@ def get_open_windows() -> List[WorkspaceItem]:
         seen.add(title)
         try:
             _, pid = win32process.GetWindowThreadProcessId(hwnd)
-            proc = psutil.Process(pid)
-            exe = proc.exe()
+            
+            p_info = pid_info.get(pid, {})
+            exe = p_info.get('exe', '')
+            name = p_info.get('name', '')
+            
+            # Use aggregated memory for the exe, or fallback to 0
+            mem_mb = exe_memory.get(name, 0)
+            
             items.append(WorkspaceItem(
                 title=title,
                 source='window',
-                path=exe
+                path=exe,
+                memoryMb=round(mem_mb, 1)
             ))
         except Exception:
             items.append(WorkspaceItem(title=title, source='window'))

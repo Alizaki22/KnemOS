@@ -121,7 +121,6 @@ export const WorkspacePreviewModal = ({ workspaceId, onClose }: Props) => {
                 key={cat}
                 categoryType={cat}
                 items={items}
-                onDragStart={() => {}} // Disabled dragging in preview
               />
             )
           })}

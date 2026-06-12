@@ -2,18 +2,18 @@ import { useState } from 'react'
 import { useWorkspaceStore, UserWorkspace, WorkspaceItem } from '../../store/workspace.store'
 import { WorkspacePreviewModal } from './WorkspacePreviewModal'
 import { AISuggestionsModal } from './AISuggestionsModal'
+import { useDroppable } from '@dnd-kit/core'
 
 interface Props {
   onDragItem: WorkspaceItem | null
-  onDropOnWorkspace: (workspaceId: string) => void
 }
 
-export const WorkspacesSection = ({ onDragItem, onDropOnWorkspace }: Props) => {
+export const WorkspacesSection = ({ onDragItem }: Props) => {
   const { workspaces, createWorkspace, renameWorkspace, deleteWorkspace, focusWorkspaceId } = useWorkspaceStore()
   const [newWorkspaceName, setNewWorkspaceName] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState('')
-  const [dragOverId, setDragOverId] = useState<string | null>(null)
+  const [dragOverId] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [previewWorkspaceId, setPreviewWorkspaceId] = useState<string | null>(null)
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -33,18 +33,6 @@ export const WorkspacesSection = ({ onDragItem, onDropOnWorkspace }: Props) => {
     }
     setEditingId(null)
     setEditingName('')
-  }
-
-  const handleDragOver = (e: React.DragEvent, wsId: string) => {
-    if (!onDragItem) return
-    e.preventDefault()
-    setDragOverId(wsId)
-  }
-
-  const handleDrop = (wsId: string) => {
-    setDragOverId(null)
-    if (!onDragItem) return
-    onDropOnWorkspace(wsId)
   }
 
   return (
@@ -81,9 +69,6 @@ export const WorkspacesSection = ({ onDragItem, onDropOnWorkspace }: Props) => {
             isFocused={focusWorkspaceId === ws.id}
             isDragOver={dragOverId === ws.id}
             isDragging={!!onDragItem}
-            onDragOver={(e) => handleDragOver(e, ws.id)}
-            onDragLeave={() => setDragOverId(null)}
-            onDrop={() => handleDrop(ws.id)}
             onEdit={() => {
               setEditingId(ws.id)
               setEditingName(ws.name)
@@ -178,9 +163,6 @@ interface WorkspaceCardProps {
   isDragging: boolean
   isEditing: boolean
   editingName: string
-  onDragOver: (e: React.DragEvent) => void
-  onDragLeave: () => void
-  onDrop: () => void
   onEdit: () => void
   onDelete: () => void
   onPreview: () => void
@@ -190,14 +172,20 @@ interface WorkspaceCardProps {
 }
 
 const WorkspaceCard = ({
-  workspace, isFocused, isDragOver, isDragging, isEditing, editingName,
-  onDragOver, onDragLeave, onDrop, onEdit, onDelete, onPreview,
+  workspace, isFocused, isDragging, isEditing, editingName,
+  onEdit, onDelete, onPreview,
   onEditNameChange, onEditSubmit, onEditCancel
 }: WorkspaceCardProps) => {
   const itemCount = workspace.items.length
+  
+  const { isOver, setNodeRef } = useDroppable({
+    id: workspace.id,
+  })
+  const isDragOver = isOver
 
   return (
     <div
+      ref={setNodeRef}
       className={`category-card ${isDragOver ? 'drag-over' : ''}`}
       style={{
         border: isFocused ? '2px solid var(--accent)' : undefined,
@@ -206,9 +194,6 @@ const WorkspaceCard = ({
         transition: 'all 0.2s var(--ease)',
         minHeight: 100,
       }}
-      onDragOver={onDragOver}
-      onDragLeave={onDragLeave}
-      onDrop={onDrop}
     >
       <div className="category-card-header">
         <div className="category-card-title-row">

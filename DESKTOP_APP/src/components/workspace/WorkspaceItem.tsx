@@ -17,7 +17,7 @@ export const WorkspaceItem = ({ item }: Props) => {
   }
 
   return (
-    <div className="flex items-center gap-2 py-1 px-1.5 hover:bg-surface-3 rounded truncate transition-colors">
+    <div className="flex items-center gap-2 py-1 px-1.5 hover:bg-[var(--hover-bg)] rounded truncate transition-colors">
       <span className="text-text-secondary opacity-70 shrink-0">{getIcon()}</span>
       <span className="text-xs text-text-secondary truncate" title={item.title}>
         {item.title}

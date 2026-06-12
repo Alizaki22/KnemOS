@@ -333,15 +333,29 @@ ollama pull qwen2.5:7b                 # Standard devices
 ollama pull qwen2.5:3b                 # Low-end / edge devices
 ```
 
-### Installation
+### Using the App (End Users)
+
+If you downloaded the `KnemOS.exe` release, you **DO NOT** need to install Node.js, Rust, or run the frontend. You only need to run the AI backend.
+
+```bash
+# 1. Download and open KnemOS.exe
+# 2. Run the local AI Backend engine:
+cd WEBSITE/BACKEND
+pip install -r requirements.txt
+uvicorn main:app --reload --port 8765
+```
+
+### Building from Source (Developers)
+
+If you are developing or building KnemOS from source, follow these steps:
 
 ```bash
 # 1. Clone the repository
 git clone https://github.com/your-username/KnemOS.git
 cd KnemOS
 
-# 2. Install Python dependencies
-cd backend
+# 2. Install Python dependencies (Backend)
+cd WEBSITE/BACKEND
 pip install -r requirements.txt
 
 # 3. Install Wolfram Engine (for analytics)
@@ -353,31 +367,23 @@ pip install wolframclient
 # Add to PATH
 
 # 5. Install frontend dependencies
-cd ../app
+cd ../../DESKTOP_APP
 npm install
 
 # 6. Install Tauri CLI
 npm install -g @tauri-apps/cli
-
-# 7. Install website dependencies
-cd ../website
-npm install
 ```
 
-### Running  Development
+### Running (Development)
 
 ```bash
 # Terminal 1: Start AI Backend
-cd backend
+cd WEBSITE/BACKEND
 uvicorn main:app --reload --port 8765
 
 # Terminal 2: Start Desktop App
-cd app
-npm run tauri:dev
-
-# Terminal 3 (optional): Start Website
-cd website
-npm run dev
+cd DESKTOP_APP
+npm run tauri dev
 ```
 
 ### Running  Production Build
@@ -533,6 +539,20 @@ KnemOS follows a strict **local-first privacy architecture**.
 | Wolfram analytics |  |  |  |  | **** |
 | RAM recovery |  |  |  |  | **** |
 | Open source stack |  |  |  |  | **** |
+
+---
+
+## Recent Updates (v2.5 Production Hardening)
+
+KnemOS has recently undergone a major production-hardening phase (v2.5) focusing on stability, UX, intelligence, and system robustness:
+- **Architecture Rewrite (`@dnd-kit`)**: Replaced HTML5 drag-and-drop with a global overlay-driven architecture for fluid cross-workspace dragging.
+- **Scheduler & Telemetry Optimization**: Eliminated event loop blocking and SQLite spam by implementing ahead-of-time process caching and MD5 payload deduplication. System latency dropped to ~15ms.
+- **Native OS Controls**: Fully integrated Tauri window controls (`minimize`, `maximize`, `close`) and custom drag regions (`data-tauri-drag-region`).
+- **Dynamic Contrast & Typography**: Integrated semantic CSS tokens (`--ink`, `--bg-panel`) ensuring perfect contrast on hover states while maintaining the strict monochrome Minimal White identity. Text is now universally selectable.
+- **True Memory Metrics**: Multi-process applications (like Chrome) are now fully aggregated via `psutil` executable mapping, displaying accurate total RAM usage.
+- **Intelligent Visual Hierarchy**: Separated browser application tracking from individual extension tabs, adding specific symbol indexing for major browsers (Chrome, Firefox, Edge, etc.) and high-fidelity favicons for web tabs.
+- **Inference Stability**: Replaced aggressive "Ollama Offline" polling banners with graceful, demand-driven inference feedback to prevent UI blocking.
+- **OS-Native Tooltips**: Contextual hover inspectors displaying real-time RAM, URL, status, and workspace mapping natively.
 
 ---
 

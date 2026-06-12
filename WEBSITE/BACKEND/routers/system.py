@@ -61,6 +61,20 @@ async def receive_tabs(payload: TabsPayload):
     from services.memory_indexer import log_activity_event
     tabs = [t.model_dump() for t in payload.tabs]
     
+    # Deduplicate repeated tab states to avoid redundant DB writes
+    import hashlib
+    import json
+    tabs_hash = hashlib.md5(json.dumps(tabs, sort_keys=True).encode()).hexdigest()
+    
+    global _last_tabs_hash
+    if '_last_tabs_hash' not in globals():
+        _last_tabs_hash = {}
+        
+    if _last_tabs_hash.get(payload.browser_id) == tabs_hash:
+        return {"status": "ok", "received": len(tabs), "skipped": True}
+        
+    _last_tabs_hash[payload.browser_id] = tabs_hash
+
     # Pass metadata to update_browser_tabs
     update_browser_tabs(payload.browser_id, payload.browser_type, tabs)
 

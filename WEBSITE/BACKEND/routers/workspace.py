@@ -202,12 +202,38 @@ async def suggest_workspaces():
             except Exception:
                 pass
 
-    # Fallback to hardcoded mock if Ollama fails
-    suggestions = [
-        {"name": "Development", "reason": "You have VS Code, terminal, and GitHub open."},
-        {"name": "Research", "reason": "Multiple tabs reading documentation and StackOverflow."},
-        {"name": "Communication", "reason": "Slack, Discord, and Email are active."}
-    ]
+    # Fallback to heuristic grouping if Ollama fails
+    suggestions = []
+    
+    # Extract domains from tabs
+    domains = set()
+    for t in tabs:
+        if t.url:
+            try:
+                domain = t.url.split("//")[-1].split("/")[0]
+                domains.add(domain)
+            except:
+                pass
+
+    if tabs:
+        suggestions.append({
+            "name": "Web Browsing", 
+            "reason": f"You have {len(tabs)} tabs open across sites like {', '.join(list(domains)[:2])}." if domains else f"You have {len(tabs)} active browser tabs."
+        })
+        
+    if windows:
+        # Get unique application names
+        app_names = list(set([w.title.split('-')[-1].strip() for w in windows if w.title]))
+        top_apps = [app for app in app_names if app][:2]
+        
+        suggestions.append({
+            "name": "Active Applications", 
+            "reason": f"You are actively using {', '.join(top_apps)}." if top_apps else f"You have {len(windows)} application windows open."
+        })
+        
+    if not suggestions:
+        suggestions = [{"name": "General Workspace", "reason": "Basic workspace for your open items."}]
+        
     return {"suggestions": suggestions}
 
 class SummaryRequest(BaseModel):

@@ -674,7 +674,19 @@ Output locations:
 
 ---
 
-## 20. Troubleshooting
+## 20. Recent Updates (v2.5 Production Hardening)
+
+The desktop shell recently underwent significant production hardening to resolve architectural bottlenecks:
+- **`@dnd-kit/core` Migration**: HTML5 Drag-and-Drop was entirely stripped out. The application now uses `DndContext` and global drag overlays, entirely fixing cross-workspace layout clipping.
+- **Dynamic Semantic Contrast**: `index.css` was upgraded with `--ink`, `--bg-panel`, and other semantic tokens. Text contrast dynamically shifts without ever blending invisibly into inverted cards. Global text selection (`user-select: auto`) was restored.
+- **Tauri Native Hooks**: The custom monochrome `TitleBar.tsx` now correctly utilizes `@tauri-apps/api/window` methods (`minimize()`, `toggleMaximize()`, `close()`) alongside OS-level `data-tauri-drag-region` mapping.
+- **True App Telemetry**: The UI now receives pre-aggregated RAM metrics via the backend. Headless browser sub-processes are correctly summed up to display the true weight of multi-process apps.
+- **UI Interaction Polish**: Misleading dead interactions (like the `+` chat upload button) were semantically corrected (changed to `↗` Send arrow). Removed aggressive backend polling flags in favor of contextual "Thinking locally" banners that gracefully degrade on AI inference failure.
+- **Visual Separation (Browsers vs Tabs)**: The desktop UI dynamically differentiates raw browser executables (using `C`, `F`, `E` symbols) from individual tab extensions (rendering specific favicons).
+
+---
+
+## 21. Troubleshooting
 
 **The window is blank / shows a loading spinner forever**  
  The backend is not running. Open `WEBSITE/BACKEND` in a terminal and run `uvicorn main:app --port 8765 --reload`.

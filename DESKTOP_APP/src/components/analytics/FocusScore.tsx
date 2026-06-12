@@ -1,4 +1,4 @@
-﻿import { useSystemStore } from '../../store/system.store'
+import { useSystemStore } from '../../store/system.store'
 import { motion } from 'framer-motion'
 
 export const FocusScore = () => {
@@ -64,7 +64,7 @@ export const FocusScore = () => {
         
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-[10px] text-text-secondary uppercase tracking-[0.2em] mb-1">Score</span>
-          <span className="text-6xl font-black text-white tracking-tighter">{score}</span>
+          <span className="text-6xl font-black text-[var(--ink)] tracking-tighter">{score}</span>
         </div>
 
         <div className={`absolute -right-4 -bottom-4 w-16 h-16 rounded-full border-2 bg-surface flex items-center justify-center ${getGradeColor()}`}>
@@ -75,15 +75,15 @@ export const FocusScore = () => {
       <div className="grid grid-cols-3 gap-4 w-full">
         <div className="glass-card p-4 rounded-xl text-center">
           <p className="text-[10px] text-text-secondary uppercase tracking-widest mb-2">Focus Time</p>
-          <p className="text-xl font-mono text-white">{Math.floor(focus_minutes / 60)}h {focus_minutes % 60}m</p>
+          <p className="text-xl font-mono text-[var(--ink)]">{Math.floor(focus_minutes / 60)}h {focus_minutes % 60}m</p>
         </div>
         <div className="glass-card p-4 rounded-xl text-center">
           <p className="text-[10px] text-text-secondary uppercase tracking-widest mb-2">Switches</p>
-          <p className="text-xl font-mono text-white">{context_switches}</p>
+          <p className="text-xl font-mono text-[var(--ink)]">{context_switches}</p>
         </div>
         <div className="glass-card p-4 rounded-xl text-center">
           <p className="text-[10px] text-text-secondary uppercase tracking-widest mb-2">Trend</p>
-          <p className="text-xl font-bold text-white capitalize flex items-center justify-center gap-2">
+          <p className="text-xl font-bold text-[var(--ink)] capitalize flex items-center justify-center gap-2">
             {trend} <span className="text-mint">{getTrendIcon()}</span>
           </p>
         </div>

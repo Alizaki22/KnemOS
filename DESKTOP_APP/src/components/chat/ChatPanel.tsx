@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react'
-import { authenticatedFetch } from '../../store/auth.store'
 import { useChatStore } from '../../store/chat.store'
 
 type ChatMode = 'query' | 'rag'
@@ -25,20 +24,11 @@ export const ChatPanel = () => {
   const { messages, isLoadingQuery, isLoadingRag, sendMessage } = useChatStore()
   const [input, setInput] = useState('')
   const [mode, setMode] = useState<ChatMode>('query')
-  const [ollamaStatus, setOllamaStatus] = useState<null | { running: boolean; model_available: boolean }>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
-
-  // Check Ollama status once on mount
-  useEffect(() => {
-    authenticatedFetch('http://127.0.0.1:8765/api/chat/status', { signal: AbortSignal.timeout(3000) })
-      .then(r => r.json())
-      .then(data => setOllamaStatus(data))
-      .catch(() => setOllamaStatus({ running: false, model_available: false }))
-  }, [])
 
   const handleSend = () => {
     const text = input.trim()
@@ -66,22 +56,6 @@ export const ChatPanel = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--ink-3)' }}>
             ○ — AI Assistant
-          </span>
-          {/* Ollama status badge */}
-          <span style={{
-            fontSize: 9,
-            fontWeight: 600,
-            letterSpacing: 1,
-            textTransform: 'uppercase',
-            padding: '3px 8px',
-            borderRadius: 20,
-            background: ollamaStatus?.running ? 'var(--accent-light)' : 'rgba(0,0,0,0.04)',
-            color: ollamaStatus?.running ? 'var(--accent)' : 'var(--ink-4)',
-            border: `1px solid ${ollamaStatus?.running ? 'var(--accent)' : 'var(--border)'}`,
-          }}>
-            {ollamaStatus === null ? '...' :
-             ollamaStatus.running && ollamaStatus.model_available ? 'Qwen2.5 Ready' :
-             ollamaStatus.running ? 'Model Missing' : 'Ollama Offline'}
           </span>
         </div>
 
@@ -118,28 +92,7 @@ export const ChatPanel = () => {
         </div>
       </div>
 
-      {/* Ollama offline warning */}
-      {ollamaStatus !== null && !ollamaStatus.running && (
-        <div style={{
-          margin: '8px 16px',
-          padding: '10px 14px',
-          background: 'rgba(0,0,0,0.03)',
-          borderRadius: 'var(--r-sm)',
-          border: '1px solid var(--border)',
-          fontSize: 11,
-          color: 'var(--ink-3)',
-          lineHeight: 1.5,
-        }}>
-          <strong>Ollama not running.</strong> Start it with:<br />
-          <code style={{ fontSize: 10, background: 'rgba(0,0,0,0.05)', padding: '1px 5px', borderRadius: 3 }}>
-            ollama serve
-          </code>
-          {' '}&amp;{' '}
-          <code style={{ fontSize: 10, background: 'rgba(0,0,0,0.05)', padding: '1px 5px', borderRadius: 3 }}>
-            ollama pull qwen2.5:7b
-          </code>
-        </div>
-      )}
+
 
       {/* Messages */}
       <div className="chat-messages">
@@ -216,8 +169,8 @@ export const ChatPanel = () => {
             onKeyDown={handleKey}
             rows={1}
           />
-          <button className="chat-send-btn" onClick={handleSend} disabled={currentIsLoading}>
-            +
+          <button className="chat-send-btn" onClick={handleSend} disabled={currentIsLoading} title="Send message">
+            ↗
           </button>
         </div>
       </div>

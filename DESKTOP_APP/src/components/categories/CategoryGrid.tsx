@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor } from '@dnd-kit/core'
 import { CategoryCard } from './CategoryCard'
 import { ProcessCategoryCard } from './ProcessCategoryCard'
 import { useCategoriesStore, CategoryType, CategoryItem } from '../../store/categories.store'
@@ -17,81 +18,111 @@ export const CategoryGrid = () => {
 
   const [dragItem, setDragItem] = useState<CategoryItem | null>(null)
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    })
+  )
 
-  const handleDragStart = (item: CategoryItem) => {
-    setDragItem(item)
+  const handleDragStartEvent = (event: any) => {
+    const { active } = event
+    if (active.data.current?.item) {
+      setDragItem(active.data.current.item)
+    }
   }
 
-  const handleDropOnWorkspace = (workspaceId: string) => {
-    if (!dragItem) return
-    addItemToWorkspace(workspaceId, {
-      id: dragItem.id,
-      title: dragItem.title,
-      source: dragItem.source,
-      url: dragItem.url,
-      path: dragItem.path,
-      categoryType: dragItem.categoryType,
-      memoryMb: dragItem.memoryMb,
-      isActive: dragItem.isActive,
-    })
+  const handleDragEndEvent = (event: any) => {
+    const { over } = event
+    if (over && dragItem) {
+      addItemToWorkspace(over.id as string, {
+        id: dragItem.id,
+        title: dragItem.title,
+        source: dragItem.source,
+        url: dragItem.url,
+        path: dragItem.path,
+        categoryType: dragItem.categoryType,
+        memoryMb: dragItem.memoryMb,
+        isActive: dragItem.isActive,
+      })
+    }
     setDragItem(null)
   }
+
 
   const totalItems = CATEGORY_ORDER.reduce((s, type) => s + (categories[type]?.length || 0), 0)
 
   if (totalItems === 0) {
     return (
-      <div>
-        <div className="empty-state fade-in-section visible">
-          <div className="empty-state-symbol">□</div>
-          <div className="empty-state-title">No active items detected</div>
-          <div className="empty-state-desc">
-            Click "Auto Organize" to scan your open windows and tabs, or wait for the backend to detect activity.
+      <DndContext sensors={sensors} onDragStart={handleDragStartEvent} onDragEnd={handleDragEndEvent}>
+        <div>
+          <div className="empty-state fade-in-section visible">
+            <div className="empty-state-symbol">□</div>
+            <div className="empty-state-title">No active items detected</div>
+            <div className="empty-state-desc">
+              Click "Auto Organize" to scan your open windows and tabs, or wait for the backend to detect activity.
+            </div>
           </div>
+          <WorkspacesSection onDragItem={dragItem} />
+          <PendingNewItemsOverlay />
         </div>
-        <WorkspacesSection onDragItem={dragItem} onDropOnWorkspace={handleDropOnWorkspace} />
-        <PendingNewItemsOverlay />
-      </div>
+      </DndContext>
     )
   }
 
   return (
-    <>
-      {/* Section Header */}
-      <div className="section-header" style={{ marginBottom: 20 }}>
-        <div className="section-title" style={{ fontSize: 28, letterSpacing: -1 }}>Workspace</div>
-        <div className="section-line" />
-        <div className="section-subtitle">+ Organization</div>
-      </div>
+    <DndContext sensors={sensors} onDragStart={handleDragStartEvent} onDragEnd={handleDragEndEvent}>
+      <>
+        {/* Section Header */}
+        <div className="section-header" style={{ marginBottom: 20 }}>
+          <div className="section-title" style={{ fontSize: 28, letterSpacing: -1 }}>Workspace</div>
+          <div className="section-line" />
+          <div className="section-subtitle">+ Organization</div>
+        </div>
 
-      {/* Category cards */}
-      <div className="category-grid">
-        {CATEGORY_ORDER.filter(c => c !== 'processes').map((cat) => (
-          <CategoryCard
-            key={cat}
-            categoryType={cat}
-            items={categories[cat] || []}
-            onDragStart={handleDragStart}
+        {/* Category cards */}
+        <div className="category-grid">
+          {CATEGORY_ORDER.filter(c => c !== 'processes').map((cat) => (
+            <CategoryCard
+              key={cat}
+              categoryType={cat}
+              items={categories[cat] || []}
+            />
+          ))}
+          
+          {/* Full-width Process Card */}
+          <ProcessCategoryCard 
+            items={categories['processes'] || []} 
           />
-        ))}
+        </div>
+
+        {/* Workspace section — separated below categories */}
+        <WorkspacesSection onDragItem={dragItem} />
+
+        {/* Category detail modal */}
+        {activeCategoryModal && (
+          <CategoryDetailModal categoryType={activeCategoryModal as CategoryType} />
+        )}
+
+        {/* Detected new items overlay */}
+        <PendingNewItemsOverlay />
         
-        {/* Full-width Process Card */}
-        <ProcessCategoryCard 
-          items={categories['processes'] || []} 
-          onDragStart={handleDragStart} 
-        />
-      </div>
-
-      {/* Workspace section — separated below categories */}
-      <WorkspacesSection onDragItem={dragItem} onDropOnWorkspace={handleDropOnWorkspace} />
-
-      {/* Category detail modal */}
-      {activeCategoryModal && (
-        <CategoryDetailModal categoryType={activeCategoryModal as CategoryType} />
-      )}
-
-      {/* Detected new items overlay */}
-      <PendingNewItemsOverlay />
-    </>
+        <DragOverlay dropAnimation={null}>
+          {dragItem ? (
+            <div style={{ 
+              padding: '8px 12px', 
+              background: 'var(--ink)', 
+              color: 'var(--bg-panel)', 
+              borderRadius: 8, 
+              fontSize: 12, 
+              boxShadow: 'var(--shadow-lg)' 
+            }}>
+              Dragging: {dragItem.title}
+            </div>
+          ) : null}
+        </DragOverlay>
+      </>
+    </DndContext>
   )
 }

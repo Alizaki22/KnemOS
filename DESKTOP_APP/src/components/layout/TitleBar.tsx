@@ -32,6 +32,9 @@ export const TitleBar = () => {
           {PANEL_LABELS[activePanel] || 'KnemOS'}
         </span>
       </div>
+      
+      {/* Draggable spacer to allow dragging the middle of the window */}
+      <div className="flex-1 h-full" data-tauri-drag-region />
 
       <div className="titlebar-right">
         {/* Backend status */}
