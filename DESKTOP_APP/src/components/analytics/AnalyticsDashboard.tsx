@@ -6,8 +6,9 @@ import { useSystemStore } from '../../store/system.store'
 import { useCategoriesStore } from '../../store/categories.store'
 import { useWorkspaceStore } from '../../store/workspace.store'
 import { useActivityStore } from '../../store/activity.store'
+import { authenticatedFetch } from '../../store/auth.store'
 
-type Tab = 'overview' | 'system' | 'activity' | 'timeline' | 'export'
+type Tab = 'overview' | 'system' | 'activity' | 'timeline' | 'export' | 'wolfram'
 
 const formatTime = (ts: number) => {
   const d = new Date(ts * 1000)
@@ -53,6 +54,7 @@ export const AnalyticsPanel = () => {
     { id: 'activity',  label: 'Activity' },
     { id: 'timeline',  label: 'Timeline' },
     { id: 'export',    label: 'Export' },
+    { id: 'wolfram',   label: 'Wolfram Intelligence' },
   ]
 
   return (
@@ -118,6 +120,10 @@ export const AnalyticsPanel = () => {
 
       {activeTab === 'export' && (
         <ExportTab categories={categories} ramStats={ramStats} focusScore={focusScore} workspaces={workspaces} />
+      )}
+
+      {activeTab === 'wolfram' && (
+        <WolframTab />
       )}
     </div>
   )
@@ -463,3 +469,108 @@ const ExportTab = ({ categories, ramStats, focusScore, workspaces }: any) => {
     </div>
   )
 }
+
+// ───────────────────────────────────────
+// Tab: Wolfram Intelligence
+// ───────────────────────────────────────
+const WolframTab = () => {
+  const [data, setData] = useState<any>(null)
+  const [graphData, setGraphData] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
+
+  const loadWolframData = async () => {
+    setLoading(true)
+    try {
+      const [resPred, resGraph] = await Promise.all([
+        authenticatedFetch('http://127.0.0.1:8765/api/wolfram/predictions'),
+        authenticatedFetch('http://127.0.0.1:8765/api/wolfram/knowledge-graph')
+      ])
+      const jsonPred = await resPred.json()
+      const jsonGraph = await resGraph.json()
+      setData(jsonPred)
+      setGraphData(jsonGraph)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--ink)' }}>Wolfram Engine Layer</div>
+        <button className="organize-btn" onClick={loadWolframData} disabled={loading}>
+          {loading ? 'Computing...' : 'Run Analytics'}
+        </button>
+      </div>
+
+      {data && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div className="focus-score-bar" style={{ position: 'relative' }}>
+            <div className="focus-score-label">Productivity Forecast</div>
+            <div style={{ position: 'absolute', top: 20, right: 20, fontSize: 10, color: data.source === 'wolfram' ? '#00C896' : 'var(--ink-4)', border: `1px solid ${data.source === 'wolfram' ? '#00C896' : 'var(--ink-4)'}`, padding: '2px 6px', borderRadius: 12 }}>
+              {data.source === 'wolfram' ? 'Wolfram Engine Active' : 'Python Fallback'}
+            </div>
+            <div style={{ fontSize: 24, fontWeight: 100, marginTop: 12, textTransform: 'capitalize' }}>{data.trend}</div>
+            <div style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 4 }}>{data.prediction}</div>
+            <div style={{ fontSize: 10, color: 'var(--accent)', marginTop: 8 }}>Burnout Risk: {data.burnout_risk}</div>
+          </div>
+        </div>
+      )}
+
+      {/* Semantic Graph Section */}
+      <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--r-md)', padding: 20, height: 300, display: 'flex', flexDirection: 'column', background: 'var(--surface-2)', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 12, zIndex: 10 }}>Semantic Relationship Graph</div>
+        
+        {!graphData ? (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink-4)', fontSize: 12 }}>
+            Run analytics to generate node graph
+          </div>
+        ) : (
+          <div style={{ flex: 1, position: 'relative' }}>
+            <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
+              {/* Draw static edges for visual effect */}
+              {graphData.nodes?.length > 1 && graphData.nodes.map((node: any, i: number) => {
+                if (i === 0) return null
+                const prevNode = graphData.nodes[0]
+                const x1 = 50 + (0 * 100)
+                const y1 = 100
+                const x2 = 50 + (i * 120)
+                const y2 = i % 2 === 0 ? 50 : 150
+                return (
+                  <line key={`edge-${i}`} x1={x1 + 60} y1={y1 + 20} x2={x2} y2={y2 + 20} stroke="var(--ink-4)" strokeWidth={1} strokeDasharray="4 4" opacity={0.3} />
+                )
+              })}
+            </svg>
+            
+            {/* Draw static nodes */}
+            {graphData.nodes?.map((node: any, i: number) => {
+              const x = 50 + (i * 120)
+              const y = i === 0 ? 100 : (i % 2 === 0 ? 50 : 150)
+              return (
+                <div key={node.id} style={{
+                  position: 'absolute',
+                  left: x,
+                  top: y,
+                  padding: '8px 12px',
+                  background: node.group === 'app' ? 'var(--surface-3)' : 'var(--surface)',
+                  border: `1px solid ${node.group === 'app' ? '#00C896' : 'var(--border)'}`,
+                  borderRadius: 16,
+                  color: 'var(--ink)',
+                  fontSize: 10,
+                  whiteSpace: 'nowrap',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                  zIndex: 2,
+                }}>
+                  {node.label.substring(0, 20)}
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+

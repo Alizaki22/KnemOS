@@ -40,7 +40,9 @@ This document outlines all current capabilities of the KnemOS ecosystem and trac
   - Event-driven connection pool for real-time frontend syncing.
   - Robust `useStableWebSocket` auto-reconnection architecture without memory leaks.
 - [x] **Automated Testing Suite**:
-  - `system_ingestion_test.py`, `websocket_test.py`, `focus_test.py`.
+  - `system_ingestion_test.py`, `websocket_test.py`, `focus_test.py`, `test_wolfram_pipeline.py`.
+- [x] **Wolfram Intelligence Layer**:
+  - Semantic relationship graph, deep focus forecasting, and heatmap generation using Wolfram Engine.
 
 ---
 
@@ -71,8 +73,6 @@ This document outlines all current capabilities of the KnemOS ecosystem and trac
 - Timeline slider in the UI to physically scroll back through historical screenshots and active tabs.
 - Semantic natural language search over past work.
 
-### Wolfram Analytics Integration
-- Feeding app-usage data into Wolfram Engine for high-fidelity workflow heatmaps and predictive distraction alerts.
 
 ### Browser Extension Connectivity
 - Finalizing the Chrome Extension (MV3) to sync precise tab states and URLs directly into the desktop app's `Categories` store via Native Messaging.

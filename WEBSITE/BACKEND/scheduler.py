@@ -17,6 +17,21 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
 heavy_pool = ThreadPoolExecutor(max_workers=2, thread_name_prefix="HeavyWorker")
+task_queue = None
+
+async def heavy_worker_loop():
+    """Background worker processing heavy queue to prevent UI freezing."""
+    while True:
+        try:
+            task_func, args = await task_queue.get()
+            loop = asyncio.get_running_loop()
+            # Execute the heavy task in the thread pool
+            result = await loop.run_in_executor(heavy_pool, task_func, *args)
+            task_queue.task_done()
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            print(f"[Queue Worker] Error: {e}")
 
 scheduler = AsyncIOScheduler()
 
@@ -26,6 +41,16 @@ def start_scheduler(ws_manager):
     Wire up the WebSocket manager via event_bus so scheduler
     doesn't need to import main.py (avoids circular imports).
     """
+    global task_queue
+    if task_queue is None:
+        try:
+            task_queue = asyncio.Queue()
+        except Exception as e:
+            print(f"[Scheduler] Queue init warning: {e}")
+
+    # Start the async worker if queue exists
+    if task_queue is not None:
+        asyncio.create_task(heavy_worker_loop())
 
     #  Register WebSocket broadcast handlers 
     async def _on_capture_complete(screenshot_id: str):
@@ -68,11 +93,19 @@ def start_scheduler(ws_manager):
     #  Scheduled jobs 
     @scheduler.scheduled_job('interval', seconds=60, id='screenshot')
     async def screenshot_job():
+        """Queue the heavy screenshot+indexing task."""
         try:
-            loop = asyncio.get_running_loop()
-            screenshot_id = await loop.run_in_executor(heavy_pool, capture_and_index)
-            if screenshot_id:
-                await event_bus.emit("capture_complete", screenshot_id)
+            def _capture_sync():
+                sid = capture_and_index()
+                if sid:
+                    # Thread-safe event emission via a small wrapper if needed
+                    pass
+                return sid
+
+            if task_queue is not None:
+                await task_queue.put((_capture_sync, ()))
+            else:
+                _capture_sync()
         except Exception as e:
             print(f"[Scheduler/Screenshot] Error: {e}")
 

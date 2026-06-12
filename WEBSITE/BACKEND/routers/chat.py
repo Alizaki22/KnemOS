@@ -34,12 +34,17 @@ def _build_system_context_query() -> str:
         from services.data_collector import get_open_windows, get_browser_tabs, get_ram_stats
         from services.wolfram_analytics import compute_focus_score
         from services.memory_indexer import get_activity_timeline
+        from services.wolfram_engine import wolfram_service
 
         windows = get_open_windows()
         tabs = get_browser_tabs()
         ram = get_ram_stats()
         focus = compute_focus_score()
         timeline = get_activity_timeline(hours=4, limit=20)
+        
+        # Wolfram Data
+        forecast = wolfram_service.generate_productivity_forecast()
+        clusters = wolfram_service.generate_workspace_clusters()
 
         window_list = "\n".join([f"- {w.title}" for w in windows[:10]])
         tab_list = "\n".join([f"- {t.title}" for t in tabs[:10]])
@@ -62,6 +67,12 @@ OPEN WINDOWS:
 
 OPEN TABS:
 {tab_list or '(none from extension)'}
+
+WOLFRAM INTELLIGENCE LAYER:
+Productivity Trend: {forecast.get('trend')}
+Prediction: {forecast.get('prediction')}
+Burnout Risk: {forecast.get('burnout_risk')}
+Suggested Workspaces: {', '.join([c['name'] for c in clusters.get('clusters', [])])}
 
 RECENT ACTIVITY (last 4 hours):
 {timeline_str or '(no activity recorded yet)'}

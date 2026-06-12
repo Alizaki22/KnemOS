@@ -1,4 +1,4 @@
-﻿# backend/services/wolfram_analytics.py
+# backend/services/wolfram_analytics.py
 """
 Analytics engine with clear data separation:
   SQLite: workspace events (metadata  ids, names, timestamps, durations)
@@ -99,23 +99,25 @@ def _compute_score_wolfram(switch_count: int, hours_active: float) -> dict | Non
     Returns None if Wolfram Engine is not available/activated.
     """
     try:
-        from wolframclient.evaluation import WolframLanguageSession
+        from services.wolfram_engine import wolfram_service
         from wolframclient.language import wl
-        import wolframclient.language.expression as wlexpr
 
-        session = WolframLanguageSession()
-        session.start()
+        session = wolfram_service.get_wolfram_session()
+        if not session:
+            return None
 
         # Wolfram formula: weighted penalty with diminishing returns
         penalty_wl = session.evaluate(
             wl.N(
                 wl.Min(40,
-                    wl.Times(switch_count, 2) *
-                    wl.Exp(wl.Times(-0.05, switch_count))  # diminishing returns
+                    wl.Times(
+                        wl.Times(switch_count, 2),
+                        wl.Exp(wl.Times(-0.05, switch_count))
+                    )
                 )
             )
         )
-        session.terminate()
+        # We do not terminate the session here because it is a reused singleton
 
         penalty = float(str(penalty_wl))
         base = 85 if hours_active > 4 else 75 if hours_active > 2 else 60

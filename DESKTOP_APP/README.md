@@ -522,11 +522,12 @@ A 2-column responsive grid of `MemoryResult` cards. During loading, it renders s
 
 ## 13. Analytics Dashboard
 
-The Analytics Dashboard (`AnalyticsDashboard.tsx`) aggregates data from three sources:
+The Analytics Dashboard (`AnalyticsDashboard.tsx`) aggregates data from four sources:
 
 1. **`FocusScore` from SystemStore**  Displayed in `FocusScore.tsx` as a circular gauge
 2. **RAM data from SystemStore**  Displayed as a bar chart showing usage vs. recovered
-3. **Wolfram API** (`/api/analytics/focus-score`)  Context switches, peak hour, workflow heatmap data  Displayed in `WorkflowChart.tsx`
+3. **Activity Logs**  Timeline of recent interactions
+4. **Wolfram API** (`/api/wolfram/predictions`)  Context switches, productivity forecasts, burnout risk, and semantic relationship graphs.
 
 The `FocusScore` gauge uses a CSS conic-gradient to render the score arc, avoiding a heavy charting library dependency.
 
@@ -683,6 +684,7 @@ The desktop shell recently underwent significant production hardening to resolve
 - **True App Telemetry**: The UI now receives pre-aggregated RAM metrics via the backend. Headless browser sub-processes are correctly summed up to display the true weight of multi-process apps.
 - **UI Interaction Polish**: Misleading dead interactions (like the `+` chat upload button) were semantically corrected (changed to `↗` Send arrow). Removed aggressive backend polling flags in favor of contextual "Thinking locally" banners that gracefully degrade on AI inference failure.
 - **Visual Separation (Browsers vs Tabs)**: The desktop UI dynamically differentiates raw browser executables (using `C`, `F`, `E` symbols) from individual tab extensions (rendering specific favicons).
+- **Wolfram Intelligence Layer**: Deep productivity forecasting, focus heatmaps, and burnout risk metrics added via a local Wolfram Engine singleton architecture. Advanced computational analytics fallback gracefully to Python heuristics if the engine is not installed.
 
 ---
 

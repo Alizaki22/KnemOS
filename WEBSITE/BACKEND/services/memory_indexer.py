@@ -157,15 +157,15 @@ def _enforce_screenshot_retention():
         conn.commit()
         conn.close()
 
-        # Prune vectors from ChromaDB
+        # Delete corresponding vectors from ChromaDB to prevent ballooning
         if deleted_ids:
-            col = _get_chroma_collection()
-            if col is not None:
-                try:
+            try:
+                col = _get_chroma_collection()
+                if col is not None:
                     col.delete(ids=deleted_ids)
                     print(f"[Memory] Pruned {len(deleted_ids)} old vectors from ChromaDB.")
-                except Exception as e:
-                    print(f"[Memory] ChromaDB pruning error: {e}")
+            except Exception as e:
+                print(f"[Memory] ChromaDB pruning error: {e}")
 
     except Exception as e:
         print(f"[Memory] Retention cleanup error: {e}")

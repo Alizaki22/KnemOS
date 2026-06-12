@@ -8,10 +8,10 @@ fn greet(name: &str) -> String {
 fn get_auth_token() -> Result<String, String> {
     // Try a few possible paths based on dev vs prod
     let possible_paths = [
-        "../WEBSITE/BACKEND/data/.auth_token",
-        "../../WEBSITE/BACKEND/data/.auth_token",
-        "WEBSITE/BACKEND/data/.auth_token",
-        ".auth_token"
+        "../WEBSITE/BACKEND/data/.jwt_token",
+        "../../WEBSITE/BACKEND/data/.jwt_token",
+        "WEBSITE/BACKEND/data/.jwt_token",
+        ".jwt_token"
     ];
 
     for path in possible_paths {

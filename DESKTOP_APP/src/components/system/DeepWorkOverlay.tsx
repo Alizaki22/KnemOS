@@ -144,9 +144,9 @@ export const DeepWorkOverlay = () => {
               cursor: 'pointer',
             }}
           >
-            <option value="">No specific workspace (custom)</option>
+            <option value="" style={{ color: '#000' }}>No specific workspace (custom)</option>
             {workspaces.map((ws) => (
-              <option key={ws.id} value={ws.id}>
+              <option key={ws.id} value={ws.id} style={{ color: '#000' }}>
                 {ws.name} ({ws.items.length} items)
               </option>
             ))}

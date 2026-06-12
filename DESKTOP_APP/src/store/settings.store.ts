@@ -6,18 +6,19 @@ export type OllamaModel = 'qwen2.5:7b' | 'qwen2.5:3b'
 
 interface AccentDef {
   value: string
+  fg: string
   r: number
   g: number
   b: number
 }
 
 export const ACCENTS: Record<AccentColor, AccentDef> = {
-  black:  { value: '#000000', r: 0,   g: 0,   b: 0   },
-  mint:   { value: '#00C896', r: 0,   g: 200, b: 150 },
-  red:    { value: '#E53935', r: 229, g: 57,  b: 53  },
-  blue:   { value: '#1E88E5', r: 30,  g: 136, b: 229 },
-  purple: { value: '#8E24AA', r: 142, g: 36,  b: 170 },
-  orange: { value: '#FB8C00', r: 251, g: 140, b: 0   },
+  black: { value: '#000000', fg: '#FFFFFF', r: 0, g: 0, b: 0 },
+  mint: { value: '#00C896', fg: '#FFFFFF', r: 0, g: 200, b: 150 },
+  red: { value: '#E53935', fg: '#FFFFFF', r: 229, g: 57, b: 53 },
+  blue: { value: '#1E88E5', fg: '#FFFFFF', r: 30, g: 136, b: 229 },
+  purple: { value: '#8E24AA', fg: '#FFFFFF', r: 142, g: 36, b: 170 },
+  orange: { value: '#FB8C00', fg: '#000000', r: 251, g: 140, b: 0 },
 }
 
 interface SettingsState {
@@ -27,6 +28,7 @@ interface SettingsState {
   isInverted: boolean
   setAccent: (a: AccentColor) => void
   setModel: (m: OllamaModel) => void
+
   setExtensionConnected: (v: boolean) => void
   setInverted: (v: boolean) => void
   applyAccentToDOM: () => void
@@ -56,7 +58,7 @@ export const useSettingsStore = create<SettingsState>()(
         const { accent, isInverted } = get()
         const def = ACCENTS[accent]
         const root = document.documentElement
-        
+
         if (isInverted) {
           // Inverted: Background becomes the accent color, ink becomes white
           root.style.setProperty('--bg', def.value)
@@ -83,6 +85,7 @@ export const useSettingsStore = create<SettingsState>()(
           root.style.setProperty('--border', `rgba(${def.r},${def.g},${def.b},0.15)`)
           root.style.setProperty('--border-hard', `rgba(${def.r},${def.g},${def.b},0.4)`)
           root.style.setProperty('--accent', def.value)
+          root.style.setProperty('--accent-fg', def.fg)
           root.style.setProperty('--accent-r', String(def.r))
           root.style.setProperty('--accent-g', String(def.g))
           root.style.setProperty('--accent-b', String(def.b))

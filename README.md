@@ -87,9 +87,18 @@ Periodically captures screenshots, runs OCR, generates embeddings, and indexes e
 
 ```
 Search: "that React auth bug from this morning"
-      
 Returns: screenshot · timestamp · full workspace state
 ```
+
+### Semantic Desktop Search (ChromaDB)
+* **Local Embeddings**: Converts text from screenshots into 1024-dimensional vectors using `mxbai-embed-large`.
+* **Concept Search**: Search for "vacation" to find a screenshot containing the word "Hawaii".
+
+### 02.5 · Wolfram Intelligence Layer (Phase 23)
+* **Computational Analytics**: Deep pro
+ductivity forecasts, context-switch tracking, and memory relationship graphs powered by Wolfram Engine.
+* **Optional Enhancement**: KnemOS functions flawlessly without it, gracefully falling back to standard Python heuristics.
+* **100% Local**: The kernel runs entirely on your local machine; absolutely no cloud endpoints.
 
 **Pipeline:**
 ```
@@ -342,22 +351,45 @@ If you downloaded the `KnemOS.exe` release, you **DO NOT** need to install Node.
 # 2. Run the local AI Backend engine:
 cd WEBSITE/BACKEND
 pip install -r requirements.txt
-uvicorn main:app --reload --port 8765
+## ⚙️ Setup & Installation
+
+We provide two paths: one for regular users, and one for developers.
+
+### 1. For Regular Users (The `.exe`)
+When you download the packaged KnemOS `.exe`, the entire React/Tauri frontend is bundled natively inside the app! You do **not** need Node.js or `npm run tauri dev`. 
+
+You only need to ensure the backend dependencies are running:
+1. **Ollama**: Download from ollama.com, install `qwen2.5:7b` and `mxbai-embed-large`.
+2. **Wolfram Engine** (Optional): Install the free Wolfram Engine 14.3 for advanced analytics.
+3. **Backend Server**: Run the Python FastAPI backend via `uvicorn main:app --port 8765`. (In the future, this will also be bundled into the exe).
+
+### 2. For Developers (Building from Source)
+
+If you want to modify the code, follow these steps:
+
+#### Step 1: Clone & Install
+```bash
+git clone https://github.com/Ahad-Dngwala/KnemOS.git
+cd KnemOS
 ```
 
-### Building from Source (Developers)
-
-If you are developing or building KnemOS from source, follow these steps:
-
+#### Step 2: Start the Backend (FastAPI + ChromaDB)
 ```bash
-# 1. Clone the repository
-git clone https://github.com/your-username/KnemOS.git
-cd KnemOS
-
-# 2. Install Python dependencies (Backend)
 cd WEBSITE/BACKEND
 pip install -r requirements.txt
+uvicorn main:app --port 8765 --reload
+```
 
+#### Step 3: Start the Frontend (Tauri + React)
+```bash
+cd ../../DESKTOP_APP
+npm install
+npm run tauri dev
+```
+
+### Additional Dependencies
+
+```bash
 # 3. Install Wolfram Engine (for analytics)
 # Download: https://www.wolfram.com/engine/
 pip install wolframclient
@@ -365,7 +397,6 @@ pip install wolframclient
 # 4. Install Tesseract OCR
 # Windows: https://github.com/UB-Mannheim/tesseract/wiki
 # Add to PATH
-
 # 5. Install frontend dependencies
 cd ../../DESKTOP_APP
 npm install

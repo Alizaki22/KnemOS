@@ -5,24 +5,35 @@ from pathlib import Path
 from fastapi import Request, HTTPException, Security
 from fastapi.security import APIKeyHeader
 
-TOKEN_FILE = Path("./data/.auth_token")
+import jwt
 
+TOKEN_FILE = Path("./data/.auth_secret")
+JWT_TOKEN_FILE = Path("./data/.jwt_token")
+
+_secret = None
 _token = None
 
 def init_auth():
-    """Generate or load the local auth token."""
-    global _token
+    """Generate or load the local JWT token secret."""
+    global _secret, _token
     TOKEN_FILE.parent.mkdir(parents=True, exist_ok=True)
     if TOKEN_FILE.exists():
-        _token = TOKEN_FILE.read_text().strip()
+        _secret = TOKEN_FILE.read_text().strip()
     else:
-        _token = secrets.token_urlsafe(32)
-        TOKEN_FILE.write_text(_token)
-        # Try to restrict file permissions to the current user (Windows/Unix)
+        _secret = secrets.token_urlsafe(32)
+        TOKEN_FILE.write_text(_secret)
         try:
             os.chmod(TOKEN_FILE, 0o600)
         except Exception:
             pass
+            
+    # Generate long-lived local JWT token
+    _token = jwt.encode({"sub": "knemos_local", "role": "admin"}, _secret, algorithm="HS256")
+    JWT_TOKEN_FILE.write_text(_token)
+    try:
+        os.chmod(JWT_TOKEN_FILE, 0o600)
+    except Exception:
+        pass
     print(f"[Auth] Local IPC Token initialized.")
 
 api_key_header = APIKeyHeader(name="Authorization", auto_error=False)
@@ -35,18 +46,22 @@ async def verify_token(request: Request, auth_header: str = Security(api_key_hea
         
     # Check query param (for WebSockets or specific requests)
     token = request.query_params.get("token")
-    if token == _token:
-        return True
         
-    # Check header
-    if auth_header:
+    # Check header if not in query
+    if not token and auth_header:
         # Standard Bearer format
         if auth_header.startswith("Bearer "):
             token = auth_header.split(" ")[1]
         else:
             token = auth_header
-        if token == _token:
-            return True
+            
+    if token:
+        try:
+            payload = jwt.decode(token, _secret, algorithms=["HS256"])
+            if payload.get("sub") == "knemos_local":
+                return True
+        except jwt.InvalidTokenError:
+            pass
             
     # For local dev extension integration without token (if needed, we can whitelist specific origins or IPs)
     # Since the Chrome Extension is local and can't read the file, we can either use a fixed extension key 

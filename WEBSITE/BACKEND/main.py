@@ -9,7 +9,7 @@ Run: uvicorn main:app --host 127.0.0.1 --port 8765 --reload
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from routers import workspace, memory, analytics, system, chat, activity, sessions, focus
+from routers import workspace, memory, analytics, system, chat, activity, sessions, focus, wolfram
 from scheduler import start_scheduler
 from services.auth import init_auth, verify_token
 import uvicorn
@@ -63,6 +63,8 @@ async def lifespan(app: FastAPI):
         pass
     # Shutdown
     print("[KnemOS] Shutting down...")
+    from services.wolfram_engine import wolfram_service
+    wolfram_service.terminate()
 
 
 app = FastAPI(
@@ -99,6 +101,7 @@ app.include_router(chat.router,      prefix="/api/chat",      tags=["chat"], dep
 app.include_router(activity.router,  prefix="/api/activity",  tags=["activity"], dependencies=protected)
 app.include_router(sessions.router,  prefix="/api/sessions",  tags=["sessions"], dependencies=protected)
 app.include_router(focus.router,     prefix="/api/focus",     tags=["focus"], dependencies=protected)
+app.include_router(wolfram.router,   prefix="/api/wolfram",   tags=["wolfram"], dependencies=protected)
 
 # System Router (Unprotected for extension tabs + health check)
 app.include_router(system.router,    prefix="/api/system",    tags=["system"])
