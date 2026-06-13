@@ -1,0 +1,25 @@
+# Environment Variables
+.env
+.env.local
+
+# Knemos Local Data
+WEBSITE/BACKEND/data/
+WEBSITE/BACKEND/screenshots/
+WEBSITE/BACKEND/logs/
+
+# Dependencies
+node_modules/
+__pycache__/
+venv/
+env/
+.venv/
+
+# Build Outputs
+dist/
+build/
+.next/
+src-tauri/target/
+
+# OS Files
+.DS_Store
+Thumbs.db
