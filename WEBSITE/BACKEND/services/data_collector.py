@@ -12,7 +12,7 @@ from typing import List
 
 # Titles to always exclude from workspace detection
 IGNORED_TITLES = {
-    "KnemOS", "Task Manager", "Program Manager", "", " ",
+    "KNEMOS", "Task Manager", "Program Manager", "", " ",
     "Microsoft Text Input Application", "Settings", "Windows Input Experience"
 }
 

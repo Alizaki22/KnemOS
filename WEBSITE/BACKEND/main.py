@@ -1,6 +1,6 @@
 # backend/main.py
 """
-KnemOS FastAPI Backend — Entry Point v2.0
+KNEMOS FastAPI Backend — Entry Point v2.0
 Port: 8765
 WebSocket: ws://127.0.0.1:8765/ws
 
@@ -53,22 +53,22 @@ import asyncio
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    print("[KnemOS] Backend v2.0 starting up...")
+    print("[KNEMOS] Backend v2.0 starting up...")
     init_auth()
     start_scheduler(manager)
-    print("[KnemOS] Ready at http://127.0.0.1:8765")
+    print("[KNEMOS] Ready at http://127.0.0.1:8765")
     try:
         yield
     except asyncio.CancelledError:
         pass
     # Shutdown
-    print("[KnemOS] Shutting down...")
+    print("[KNEMOS] Shutting down...")
     from services.wolfram_engine import wolfram_service
     wolfram_service.terminate()
 
 
 app = FastAPI(
-    title="KnemOS AI Backend",
+    title="KNEMOS AI Backend",
     version="2.0.0",
     description="Cognitive workspace OS — local AI backend",
     lifespan=lifespan

@@ -51,8 +51,8 @@ export default function AuthPage() {
       <div className="w-full max-w-sm">
 
         <div className="flex items-center gap-2 justify-center mb-10">
-          <img src="/logo.svg" alt="KnemOS" className="w-8 h-8" />
-          <span className="font-bold text-lg tracking-widest text-black">KnemOS</span>
+          <img src="/logo.svg" alt="KNEMOS" className="w-8 h-8" />
+          <span className="font-bold text-lg tracking-widest text-black">KNEMOS</span>
         </div>
 
         {sent ? (

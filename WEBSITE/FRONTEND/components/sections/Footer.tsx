@@ -8,8 +8,9 @@ export const Footer = () => (
       {/* Brand */}
       <div className="flex flex-col gap-6">
         <div className="flex items-center gap-4">
+          <img src="/KNEMOS.png" alt="KNEMOS Logo" className="w-8 h-8 object-contain" />
           <div className="w-[10px] h-[10px] bg-black"></div>
-          <span className="text-2xl font-bold tracking-[-1px] font-display text-black">KnemOS</span>
+          <span className="text-2xl font-bold tracking-[-1px] font-display text-black">KNEMOS</span>
         </div>
         <p className="text-xs text-[#666] tracking-[0.5px] max-w-xs leading-relaxed">
           The local-first semantic operating system. <br />
@@ -34,10 +35,10 @@ export const Footer = () => (
         
         <div className="flex flex-col gap-4">
           <span className="text-[#888] mb-2">Resources</span>
-          <a href="https://github.com/Ahad-Dngwala/KnemOS" target="_blank" className="hover:text-[#666] transition-colors flex items-center gap-2 group">
+          <a href="https://github.com/Ahad-Dngwala/KNEMOS" target="_blank" className="hover:text-[#666] transition-colors flex items-center gap-2 group">
             GitHub <span className="opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0">↗</span>
           </a>
-          <a href="https://github.com/Ahad-Dngwala/KnemOS/wiki" target="_blank" className="hover:text-[#666] transition-colors flex items-center gap-2 group">
+          <a href="https://github.com/Ahad-Dngwala/KNEMOS/wiki" target="_blank" className="hover:text-[#666] transition-colors flex items-center gap-2 group">
             Documentation <span className="opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0">↗</span>
           </a>
         </div>

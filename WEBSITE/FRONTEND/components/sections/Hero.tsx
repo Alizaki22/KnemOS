@@ -56,7 +56,7 @@ export const Hero = () => (
         transition={{ duration: 0.6, delay: 0.3 }}
         className="text-base text-[#555555] max-w-xl mx-auto leading-relaxed mb-10"
       >
-        KnemOS automatically organizes your browser tabs, IDE sessions, and local files
+        KNEMOS automatically organizes your browser tabs, IDE sessions, and local files
         into intelligent semantic workspaces. Your screen history becomes searchable.
         Your focus becomes measurable.
       </motion.p>
@@ -78,7 +78,7 @@ export const Hero = () => (
 
         {/* Secondary */}
         <a
-          href="https://github.com/Ahad-Dngwala/KnemOS"
+          href="https://github.com/Ahad-Dngwala/KNEMOS"
           className="text-xs uppercase tracking-[2px] font-bold text-[#888] hover:text-black transition-colors flex items-center gap-1"
         >
           View on GitHub <span>→</span>

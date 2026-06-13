@@ -51,7 +51,7 @@ export const DownloadCTA = () => (
               Download Now
             </Link>
             <a
-              href="https://github.com/Ahad-Dngwala/KnemOS"
+              href="https://github.com/Ahad-Dngwala/KNEMOS"
               className="inline-flex items-center text-xs tracking-[2px] uppercase font-bold text-black hover:text-[#666] transition-colors"
             >
               View GitHub <span>→</span>

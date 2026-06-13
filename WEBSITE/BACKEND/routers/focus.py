@@ -52,8 +52,8 @@ async def activate_focus(req: FocusActivateRequest):
         await _restore_windows()
 
     protected = set(req.protected_titles or [])
-    # Always protect KnemOS itself
-    protected.add("KnemOS")
+    # Always protect KNEMOS itself
+    protected.add("KNEMOS")
 
     _focus_state["active"] = True
     _focus_state["workspace_id"] = req.workspace_id

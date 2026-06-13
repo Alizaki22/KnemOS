@@ -1,4 +1,4 @@
-// popup.js — KnemOS Extension Popup
+// popup.js — KNEMOS Extension Popup
 // Features: offline mode, live tab list, theme customization (light/dark + accent color)
 
 'use strict'

@@ -48,7 +48,7 @@ export const DeepWorkOverlay = () => {
       }
     } catch {
       setStatus('error')
-      setErrorMsg('Backend not reachable. Make sure KnemOS backend is running.')
+      setErrorMsg('Backend not reachable. Make sure KNEMOS backend is running.')
     } finally {
       setIsActivating(false)
     }

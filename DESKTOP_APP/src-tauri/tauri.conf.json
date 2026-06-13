@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "KnemOS",
+  "productName": "KNEMOS",
   "version": "1.0.0",
   "identifier": "dev.knemos.app",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "KnemOS",
+        "title": "KNEMOS",
         "width": 1300,
         "height": 840,
         "minWidth": 1000,

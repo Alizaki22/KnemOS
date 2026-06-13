@@ -1,6 +1,6 @@
 ﻿# backend/services/event_manager.py
 """
-Central event bus for KnemOS services.
+Central event bus for KNEMOS services.
 Decouples services so they don't import each other directly.
 Usage:
     from services.event_manager import event_bus

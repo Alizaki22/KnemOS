@@ -32,7 +32,7 @@ export default function DownloadPage() {
       <div className="max-w-4xl w-full mt-8">
         
         <div className="text-center mb-16 relative">
-          <h1 className="text-6xl font-[100] tracking-[-2px] font-display text-black mb-4">Download KnemOS</h1>
+          <h1 className="text-6xl font-[100] tracking-[-2px] font-display text-black mb-4">Download KNEMOS</h1>
           <div className="w-[30px] h-[30px] border border-black rotate-45 mx-auto"></div>
         </div>
 
@@ -45,7 +45,7 @@ export default function DownloadPage() {
             <p className="text-sm text-[#666] leading-relaxed mb-8">
               The core operating layer for Windows 10/11. Requires local installation of Ollama and Tesseract OCR for maximum offline privacy.
             </p>
-            <a href="/downloads/KnemOS-Setup.exe" className="cta-button">
+            <a href="/downloads/KNEMOS-Setup.exe" className="cta-button">
               Download .exe
             </a>
           </div>
@@ -64,7 +64,7 @@ export default function DownloadPage() {
           <div className="bg-white p-12 border border-black relative group hover:-translate-y-1 transition-transform">
             <h3 className="text-3xl font-[100] tracking-[-1px] font-display text-black mb-4">Browser Extension</h3>
             <p className="text-sm text-[#666] leading-relaxed mb-8">
-              Chrome & Edge extension to feed your active tabs into the KnemOS semantic memory pipeline. Optional, but highly recommended.
+              Chrome & Edge extension to feed your active tabs into the KNEMOS semantic memory pipeline. Optional, but highly recommended.
             </p>
             <a href="https://chrome.google.com/webstore/detail/knemos/your-extension-id" className="inline-block px-8 py-3 border-2 border-black text-xs uppercase tracking-[2px] font-bold text-black hover:bg-black hover:text-white transition-colors">
               Install Extension

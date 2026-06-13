@@ -18,7 +18,7 @@ export const useFocusAutomation = () => {
       if (isIdle.current) {
         isIdle.current = false
         // User returned! We could trigger an auto-focus clean up here.
-        // For KnemOS: "detect when user returns after being away... quietly minimize non-relevant items"
+        // For KNEMOS: "detect when user returns after being away... quietly minimize non-relevant items"
         handleUserReturn()
       }
     }

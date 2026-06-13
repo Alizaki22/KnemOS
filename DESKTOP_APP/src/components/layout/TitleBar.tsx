@@ -25,11 +25,12 @@ export const TitleBar = () => {
   return (
     <div className="titlebar">
       <div className="titlebar-left" data-tauri-drag-region>
-        <div className="titlebar-logo" data-tauri-drag-region>
+        <div className="titlebar-logo flex items-center gap-2" data-tauri-drag-region>
+          <img src="/KNEMOS.png" alt="KNEMOS Logo" className="w-4 h-4 object-contain pointer-events-none" />
           <span className="titlebar-logo-text" data-tauri-drag-region>KNEMOS</span>
         </div>
         <span className="titlebar-section-label" data-tauri-drag-region>
-          {PANEL_LABELS[activePanel] || 'KnemOS'}
+          {PANEL_LABELS[activePanel] || 'KNEMOS'}
         </span>
       </div>
       

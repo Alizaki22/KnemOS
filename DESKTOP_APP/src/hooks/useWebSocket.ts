@@ -16,7 +16,7 @@ export const useWebSocket = () => {
     wsRef.current = ws
 
     ws.onopen = () => {
-      console.log('[WS] Connected to KnemOS backend')
+      console.log('[WS] Connected to KNEMOS backend')
     }
 
     ws.onmessage = ({ data }) => {

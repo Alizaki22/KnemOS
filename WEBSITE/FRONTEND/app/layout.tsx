@@ -13,7 +13,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "KnemOS - Semantic Workspace OS",
+  title: "KNEMOS - Semantic Workspace OS",
   description: "AI-Powered Semantic Workspace Operating System",
 };
 

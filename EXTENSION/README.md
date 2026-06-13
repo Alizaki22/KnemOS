@@ -1,14 +1,14 @@
-# KnemOS Chrome Extension
+# KNEMOS Chrome Extension
 
-> Browser intelligence layer for KnemOS — sends tab context to the local AI workspace engine.
+> Browser intelligence layer for KNEMOS — sends tab context to the local AI workspace engine.
 
 ---
 
 ## What This Does
 
-This Chrome Extension reads all your open browser tabs (titles + URLs) and sends them to the KnemOS desktop backend running locally at `http://127.0.0.1:8765`.
+This Chrome Extension reads all your open browser tabs (titles + URLs) and sends them to the KNEMOS desktop backend running locally at `http://127.0.0.1:8765`.
 
-Without this extension, KnemOS sees Chrome as just one window. With it, KnemOS can distinguish every individual tab — enabling the AI to cluster "GitHub + FastAPI Docs + Stack Overflow" into a "Development Workspace".
+Without this extension, KNEMOS sees Chrome as just one window. With it, KNEMOS can distinguish every individual tab — enabling the AI to cluster "GitHub + FastAPI Docs + Stack Overflow" into a "Development Workspace".
 
 ---
 
@@ -41,7 +41,7 @@ extension/
 2. Enable **Developer mode** (top right toggle)
 3. Click **Load unpacked**
 4. Select this `extension/` folder
-5. KnemOS icon appears in toolbar ✓
+5. KNEMOS icon appears in toolbar ✓
 
 ---
 
@@ -90,10 +90,10 @@ Filtered out: `chrome://`, `chrome-extension://`, `about:`, `edge://`, `devtools
 
 ```bash
 # Windows
-Compress-Archive -Path . -DestinationPath KnemOS-Extension.zip -Force
+Compress-Archive -Path . -DestinationPath KNEMOS-Extension.zip -Force
 # Exclude make-icons.ps1, generate-icons.js, mock-server.js, *.md from the ZIP before submitting to Chrome Web Store
 ```
 
 ---
 
-*KnemOS — OSC AI Build 1.0 | Person 3: Chrome Extension*
+*KNEMOS — OSC AI Build 1.0 | Person 3: Chrome Extension*

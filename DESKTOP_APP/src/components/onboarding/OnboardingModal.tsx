@@ -7,9 +7,9 @@ interface Props {
 const STEPS = [
   {
     id: 'welcome',
-    title: 'Welcome to KnemOS',
+    title: 'Welcome to KNEMOS',
     subtitle: 'A semantic operating layer for your work',
-    content: `KnemOS understands your workflow, organizes your open apps and tabs into meaningful categories, and lets you query your entire work history with a local AI.
+    content: `KNEMOS understands your workflow, organizes your open apps and tabs into meaningful categories, and lets you query your entire work history with a local AI.
 
 Everything runs on your machine. No cloud. No data leaving your system.`,
     symbol: '○',
@@ -18,7 +18,7 @@ Everything runs on your machine. No cloud. No data leaving your system.`,
     id: 'backend',
     title: 'Start the Backend',
     subtitle: 'Local intelligence engine',
-    content: `KnemOS needs its Python backend to be running to capture system data, track activity, and power the AI chat.
+    content: `KNEMOS needs its Python backend to be running to capture system data, track activity, and power the AI chat.
 
 Open a terminal and run:`,
     code: 'cd WEBSITE/BACKEND && uvicorn main:app --port 8765 --reload',
@@ -28,7 +28,7 @@ Open a terminal and run:`,
     id: 'ai',
     title: 'Setup Local AI',
     subtitle: 'Qwen2.5 — fully offline',
-    content: `KnemOS uses Qwen2.5 running locally via Ollama for all AI features. No API keys needed, no cloud required.
+    content: `KNEMOS uses Qwen2.5 running locally via Ollama for all AI features. No API keys needed, no cloud required.
 
 Install Ollama from ollama.com, then run:`,
     code: 'ollama pull qwen2.5:7b',
@@ -39,7 +39,7 @@ Install Ollama from ollama.com, then run:`,
     id: 'extension',
     title: 'Chrome Extension',
     subtitle: 'Tab intelligence',
-    content: `The KnemOS Chrome extension sends your open tabs to the backend in real time — powering tab detection, semantic search, and AI chat context.
+    content: `The KNEMOS Chrome extension sends your open tabs to the backend in real time — powering tab detection, semantic search, and AI chat context.
 
 To install:
 1. Open Chrome and go to chrome://extensions/
@@ -51,7 +51,7 @@ To install:
   {
     id: 'done',
     title: "You're ready",
-    subtitle: 'KnemOS is configured',
+    subtitle: 'KNEMOS is configured',
     content: `You can now:
 - See open apps, tabs, and browsers organized automatically
 - Create workspaces to group related items
@@ -182,7 +182,7 @@ export const OnboardingModal = ({ onComplete }: Props) => {
                 cursor: 'pointer',
               }}
             >
-              Start KnemOS
+              Start KNEMOS
             </button>
           ) : (
             <button

@@ -55,7 +55,7 @@ export const SettingsPanel = () => {
   }
 
   const handleResetOnboarding = () => {
-    if (confirm('This will show the setup guide next time you launch KnemOS. Continue?')) {
+    if (confirm('This will show the setup guide next time you launch KNEMOS. Continue?')) {
       localStorage.removeItem('knemos-onboarded')
       alert('Onboarding reset. It will appear on next launch.')
     }
@@ -263,7 +263,7 @@ export const SettingsPanel = () => {
 
       {/* Footer */}
       <div style={{ textAlign: 'center', marginTop: 40, color: 'var(--ink-4)', fontSize: 11 }}>
-        KnemOS Desktop v2.0.0
+        KNEMOS Desktop v2.0.0
         <br />
         Minimal White Theme — Local First — Offline First
       </div>

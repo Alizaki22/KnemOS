@@ -72,7 +72,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     } catch {
       addMessage({
         role: 'assistant',
-        content: 'Could not reach KnemOS AI backend. Make sure the backend is running on port 8765 and Ollama is started.',
+        content: 'Could not reach KNEMOS AI backend. Make sure the backend is running on port 8765 and Ollama is started.',
         mode,
       })
     } finally {

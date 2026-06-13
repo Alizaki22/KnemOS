@@ -8,7 +8,8 @@ export const Navbar = () => (
 
       {/* Logo */}
       <Link href="/" className="flex items-center gap-2 text-2xl font-bold tracking-[-1px] text-black relative pr-4">
-        <span className="font-display">KnemOS</span>
+        <img src="/KNEMOS.png" alt="KNEMOS Logo" className="w-6 h-6 object-contain" />
+        <span className="font-display">KNEMOS</span>
         <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 bg-black"></div>
       </Link>
 

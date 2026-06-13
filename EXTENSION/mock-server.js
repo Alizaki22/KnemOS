@@ -1,4 +1,4 @@
-// mock-server.js — KnemOS Mock Backend for Extension Testing
+// mock-server.js — KNEMOS Mock Backend for Extension Testing
 // Run: node mock-server.js
 // Listens on http://127.0.0.1:8765 and logs incoming tab data
 
@@ -64,7 +64,7 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, '127.0.0.1', () => {
   console.log('╔══════════════════════════════════════╗')
-  console.log('║   KnemOS Mock Backend — Running      ║')
+  console.log('║   KNEMOS Mock Backend — Running      ║')
   console.log(`║   http://127.0.0.1:${PORT}             ║`)
   console.log('╚══════════════════════════════════════╝')
   console.log('')

@@ -1,4 +1,4 @@
-# KnemOS Desktop Application
+# KNEMOS Desktop Application
 
 > The native, AI-powered cognitive shell for your desktop. Built with Tauri v2, React 18, and TailwindCSS v4.
 
@@ -11,7 +11,7 @@
 
 ## What Is This?
 
-The KnemOS Desktop App is the **visual and interactive layer** of the KnemOS system. It is not a standalone application  it acts as a reactive display shell that connects to the local FastAPI AI engine running on `127.0.0.1:8765`.
+The KNEMOS Desktop App is the **visual and interactive layer** of the KNEMOS system. It is not a standalone application  it acts as a reactive display shell that connects to the local FastAPI AI engine running on `127.0.0.1:8765`.
 
 Think of it as the cockpit: the backend engine does all the thinking, and this app is the dashboard you steer with.
 
@@ -48,7 +48,7 @@ The key engineering decision was to choose **Tauri v2 over Electron**. This resu
 
 Modern desktop software suffers from a paradox: the tools meant to increase productivity are themselves fragmenting attention. Every notification, every unrelated window, every tab  each carries a cognitive tax.
 
-The KnemOS Desktop App is built around three principles:
+The KNEMOS Desktop App is built around three principles:
 
 **1. Zero Friction Awareness**  
 The user should never have to manually organize their workspace. The AI backend continuously monitors running processes, open windows, and browser tabs, and the Desktop App simply *reflects* the resulting semantic groupings in real-time.
@@ -94,7 +94,7 @@ TailwindCSS v4 dropped the JavaScript config file entirely. The design tokens (`
 
 ```
 
-                  KnemOS Desktop App                           
+                  KNEMOS Desktop App                           
                                                               
      
      TitleBar                 MainArea                    
@@ -539,7 +539,7 @@ Key settings in `src-tauri/tauri.conf.json`:
 
 ```json
 {
-  "productName": "KnemOS",
+  "productName": "KNEMOS",
   "identifier": "dev.knemos.app",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -584,7 +584,7 @@ The CSP (`content-src-policy`) is the key security configuration. It hard-locks 
 3. **Visual Studio C++ Build Tools** (Windows only)  
    Required by Rust. Download via Visual Studio Installer, select "Desktop development with C++".
 
-4. **KnemOS Backend Engine** (must be running)  
+4. **KNEMOS Backend Engine** (must be running)  
    ```bash
    cd WEBSITE/BACKEND
    uvicorn main:app --port 8765 --reload
@@ -639,9 +639,9 @@ npm run tauri build
 ```
 
 Output locations:
-- **Windows** (NSIS installer): `src-tauri/target/release/bundle/nsis/KnemOS_1.0.0_x64-setup.exe`
-- **Windows** (MSI): `src-tauri/target/release/bundle/msi/KnemOS_1.0.0_x64_en-US.msi`
-- **Raw binary**: `src-tauri/target/release/KnemOS.exe`
+- **Windows** (NSIS installer): `src-tauri/target/release/bundle/nsis/KNEMOS_1.0.0_x64-setup.exe`
+- **Windows** (MSI): `src-tauri/target/release/bundle/msi/KNEMOS_1.0.0_x64_en-US.msi`
+- **Raw binary**: `src-tauri/target/release/KNEMOS.exe`
 
 ---
 
@@ -714,4 +714,4 @@ The desktop shell recently underwent significant production hardening to resolve
 ---
 
 *End of Documentation.*  
-*KnemOS Desktop App  Tauri v2 + React 18 + TailwindCSS v4*
+*KNEMOS Desktop App  Tauri v2 + React 18 + TailwindCSS v4*

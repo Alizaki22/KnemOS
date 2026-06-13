@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "KnemOS",
+  "name": "KNEMOS",
   "version": "1.0.0",
-  "description": "Browser intelligence layer for KnemOS — sends your tab context to the local AI workspace engine.",
+  "description": "Browser intelligence layer for KNEMOS — sends your tab context to the local AI workspace engine.",
 
   "permissions": [
     "tabs",
@@ -27,7 +27,7 @@
       "48":  "icons/icon48.png",
       "128": "icons/icon128.png"
     },
-    "default_title": "KnemOS — Browser Intelligence"
+    "default_title": "KNEMOS — Browser Intelligence"
   },
 
   "icons": {

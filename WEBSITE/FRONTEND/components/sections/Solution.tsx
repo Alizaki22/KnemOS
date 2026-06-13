@@ -11,7 +11,7 @@ export const Solution = () => (
         {/* Left Side */}
         <div className="text-right pr-5">
           <h2 className="text-6xl font-[100] tracking-[-2px] mb-8 relative inline-block font-display text-black">
-            KnemOS
+            KNEMOS
             <br />
             understands.
             <div className="absolute left-[-40px] top-1/2 w-[30px] h-[30px] bg-black -translate-y-1/2"></div>
@@ -24,7 +24,7 @@ export const Solution = () => (
         {/* Right Side */}
         <div className="pl-5">
           <p className="text-lg leading-[2] mb-8 text-black">
-            KnemOS reads every open window, browser tab, and file path.
+            KNEMOS reads every open window, browser tab, and file path.
             It groups them into named semantic workspaces automatically —
             no setup, no folders, no manual tagging.
           </p>

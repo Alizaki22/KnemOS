@@ -53,9 +53,9 @@ def _build_system_context_query() -> str:
             for e in timeline[:10]
         ])
 
-        return f"""You are KnemOS, a local AI assistant integrated into a semantic desktop operating system.
+        return f"""You are KNEMOS, a local AI assistant integrated into a semantic desktop operating system.
 You have access to the user's current system state. Answer questions accurately based on this context.
-Never mention you are a language model or Qwen. Just answer as KnemOS.
+Never mention you are a language model or Qwen. Just answer as KNEMOS.
 
 CURRENT SYSTEM STATE:
 RAM: {ram.get('used_gb', '?')}GB used of {ram.get('total_gb', '?')}GB ({ram.get('percent', '?')}%)
@@ -78,7 +78,7 @@ RECENT ACTIVITY (last 4 hours):
 {timeline_str or '(no activity recorded yet)'}
 """
     except Exception as e:
-        return f"You are KnemOS AI. Answer the user's question. (Context unavailable: {e})"
+        return f"You are KNEMOS AI. Answer the user's question. (Context unavailable: {e})"
 
 
 def _build_rag_context(query: str) -> str:
@@ -100,7 +100,7 @@ def _build_rag_context(query: str) -> str:
             for r in keyword_results
         ])
 
-        return f"""You are KnemOS, a local AI assistant with access to the user's historical workspace memory.
+        return f"""You are KNEMOS, a local AI assistant with access to the user's historical workspace memory.
 Answer questions based on stored activity logs and indexed screen content.
 
 SEMANTIC MEMORY (most relevant stored content):
@@ -110,7 +110,7 @@ ACTIVITY LOG MATCHES:
 {kw_str or '(no matching activity)'}
 """
     except Exception as e:
-        return f"You are KnemOS AI with memory access. (Memory unavailable: {e})"
+        return f"You are KNEMOS AI with memory access. (Memory unavailable: {e})"
 
 
 def _call_ollama(system_prompt: str, user_message: str, history: List[ChatMessage]) -> str:
@@ -141,13 +141,13 @@ def _call_ollama(system_prompt: str, user_message: str, history: List[ChatMessag
             data = resp.json()
             return data.get("message", {}).get("content", "")
         else:
-            return f"[KnemOS AI] Ollama returned status {resp.status_code}. Make sure Ollama is running with: ollama serve"
+            return f"[KNEMOS AI] Ollama returned status {resp.status_code}. Make sure Ollama is running with: ollama serve"
     except requests.exceptions.ConnectionError:
-        return "[KnemOS AI] Cannot connect to Ollama. Please start Ollama with: ollama serve — then ensure the model is available: ollama pull qwen2.5:7b"
+        return "[KNEMOS AI] Cannot connect to Ollama. Please start Ollama with: ollama serve — then ensure the model is available: ollama pull qwen2.5:7b"
     except requests.exceptions.Timeout:
-        return "[KnemOS AI] The local model is taking longer than expected. This is normal on first load. Please try again."
+        return "[KNEMOS AI] The local model is taking longer than expected. This is normal on first load. Please try again."
     except Exception as e:
-        return f"[KnemOS AI] Error: {e}"
+        return f"[KNEMOS AI] Error: {e}"
 
 
 @router.post("")

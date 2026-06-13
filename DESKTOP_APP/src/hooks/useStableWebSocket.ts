@@ -38,7 +38,7 @@ export const useStableWebSocket = () => {
     setWs(ws)
 
     ws.onopen = () => {
-      console.log('[WS] Connected to KnemOS backend')
+      console.log('[WS] Connected to KNEMOS backend')
       isConnectingRef.current = false
       setIsConnected(true)
       

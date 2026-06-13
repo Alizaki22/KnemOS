@@ -1,8 +1,8 @@
-# KnemOS
+# KNEMOS
 
 > **K**nowledge · **nem**onics · **OS**  The Cognitive Layer for Your Desktop
 
-![KnemOS](https://img.shields.io/badge/KnemOS-v1.0--alpha-000000?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PC9zdmc+)
+![KNEMOS](https://img.shields.io/badge/KNEMOS-v1.0--alpha-000000?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PC9zdmc+)
 ![Track](https://img.shields.io/badge/OSC_AI_Build_1.0-Future_of_Productivity-00C896?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/Platform-Windows_MVP-0A0A0A?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-MIT-00C896?style=for-the-badge)
@@ -21,12 +21,12 @@
 
 ---
 
-## What is KnemOS?
+## What is KNEMOS?
 
 Modern operating systems were designed **30 years ago** around files and folders.  
 Today, knowledge workers live across 40+ browser tabs, multiple IDEs, local files, terminal sessions, and messaging apps  simultaneously.
 
-**KnemOS** is a local-first AI productivity system that acts as a cognitive layer between the user and their computer. It automatically clusters your entire digital workspace into intelligent semantic groups, makes your screen history searchable in natural language, and measures your cognitive performance using Wolfram Language analytics.
+**KNEMOS** is a local-first AI productivity system that acts as a cognitive layer between the user and their computer. It automatically clusters your entire digital workspace into intelligent semantic groups, makes your screen history searchable in natural language, and measures your cognitive performance using Wolfram Language analytics.
 
 > *"A cognitive operating layer between the user and their computer."*
 
@@ -45,11 +45,11 @@ Today, knowledge workers live across 40+ browser tabs, multiple IDEs, local file
 
 ## Product Ecosystem
 
-KnemOS ships as three connected systems:
+KNEMOS ships as three connected systems:
 
 ```
 
-                     KnemOS Ecosystem                         
+                     KNEMOS Ecosystem                         
                                                              
             
      Website         Desktop App          Browser     
@@ -97,7 +97,7 @@ Returns: screenshot · timestamp · full workspace state
 ### 02.5 · Wolfram Intelligence Layer (Phase 23)
 * **Computational Analytics**: Deep pro
 ductivity forecasts, context-switch tracking, and memory relationship graphs powered by Wolfram Engine.
-* **Optional Enhancement**: KnemOS functions flawlessly without it, gracefully falling back to standard Python heuristics.
+* **Optional Enhancement**: KNEMOS functions flawlessly without it, gracefully falling back to standard Python heuristics.
 * **100% Local**: The kernel runs entirely on your local machine; absolutely no cloud endpoints.
 
 **Pipeline:**
@@ -194,7 +194,7 @@ Step 6  Workflow Analytics
 | Qwen2.5-7B | ~6 GB | Standard laptops / desktops | Full workspace naming & reasoning |
 | Qwen2.5-3B | ~3 GB | Low-end / edge devices | Lightweight workspace naming |
 
-KnemOS auto-detects available system memory at startup and selects the appropriate model variant.
+KNEMOS auto-detects available system memory at startup and selects the appropriate model variant.
 
 ---
 
@@ -344,10 +344,10 @@ ollama pull qwen2.5:3b                 # Low-end / edge devices
 
 ### Using the App (End Users)
 
-If you downloaded the `KnemOS.exe` release, you **DO NOT** need to install Node.js, Rust, or run the frontend. You only need to run the AI backend.
+If you downloaded the `KNEMOS.exe` release, you **DO NOT** need to install Node.js, Rust, or run the frontend. You only need to run the AI backend.
 
 ```bash
-# 1. Download and open KnemOS.exe
+# 1. Download and open KNEMOS.exe
 # 2. Run the local AI Backend engine:
 cd WEBSITE/BACKEND
 pip install -r requirements.txt
@@ -356,7 +356,7 @@ pip install -r requirements.txt
 We provide two paths: one for regular users, and one for developers.
 
 ### 1. For Regular Users (The `.exe`)
-When you download the packaged KnemOS `.exe`, the entire React/Tauri frontend is bundled natively inside the app! You do **not** need Node.js or `npm run tauri dev`. 
+When you download the packaged KNEMOS `.exe`, the entire React/Tauri frontend is bundled natively inside the app! You do **not** need Node.js or `npm run tauri dev`. 
 
 You only need to ensure the backend dependencies are running:
 1. **Ollama**: Download from ollama.com, install `qwen2.5:7b` and `mxbai-embed-large`.
@@ -369,8 +369,8 @@ If you want to modify the code, follow these steps:
 
 #### Step 1: Clone & Install
 ```bash
-git clone https://github.com/Ahad-Dngwala/KnemOS.git
-cd KnemOS
+git clone https://github.com/Ahad-Dngwala/KNEMOS.git
+cd KNEMOS
 ```
 
 #### Step 2: Start the Backend (FastAPI + ChromaDB)
@@ -439,7 +439,7 @@ Detailed documentation is split across the following files:
 - [Desktop App README](./DESKTOP_APP/README.md)
 
 ```
-KnemOS/
+KNEMOS/
 
  website/                    # Next.js 15 landing page
     app/
@@ -540,7 +540,7 @@ WebSocket /ws                       Real-time workspace events
 
 ## Privacy & Security
 
-KnemOS follows a strict **local-first privacy architecture**.
+KNEMOS follows a strict **local-first privacy architecture**.
 
 | Data Type | Storage Location |
 |-----------|-----------------|
@@ -561,7 +561,7 @@ KnemOS follows a strict **local-first privacy architecture**.
 
 ## Competitive Comparison
 
-| Feature | Workona | OneTab | Arc Browser | Rewind.ai | **KnemOS** |
+| Feature | Workona | OneTab | Arc Browser | Rewind.ai | **KNEMOS** |
 |---------|---------|--------|-------------|-----------|------------|
 | Semantic AI clustering |  |  | Manual |  | **** |
 | Cross-app workspace |  |  | Browser only | partial | **** |
@@ -575,7 +575,7 @@ KnemOS follows a strict **local-first privacy architecture**.
 
 ## Recent Updates (v2.5 Production Hardening)
 
-KnemOS has recently undergone a major production-hardening phase (v2.5) focusing on stability, UX, intelligence, and system robustness:
+KNEMOS has recently undergone a major production-hardening phase (v2.5) focusing on stability, UX, intelligence, and system robustness:
 - **Architecture Rewrite (`@dnd-kit`)**: Replaced HTML5 drag-and-drop with a global overlay-driven architecture for fluid cross-workspace dragging.
 - **Scheduler & Telemetry Optimization**: Eliminated event loop blocking and SQLite spam by implementing ahead-of-time process caching and MD5 payload deduplication. System latency dropped to ~15ms.
 - **Native OS Controls**: Fully integrated Tauri window controls (`minimize`, `maximize`, `close`) and custom drag regions (`data-tauri-drag-region`).
@@ -611,7 +611,7 @@ analytics                       SSO + audit    work summaries
 
 ## Contributing
 
-Contributions are welcome. KnemOS is built for the open-source community.
+Contributions are welcome. KNEMOS is built for the open-source community.
 
 ```bash
 # Fork  Clone  Branch  Build  PR
@@ -654,10 +654,10 @@ Built with:
 
 <div align="center">
 
-**KnemOS** · OSC AI Build 1.0 · Future of Productivity Track
+**KNEMOS** · OSC AI Build 1.0 · Future of Productivity Track
 
 *The cognitive layer your OS never had.*
 
-[knemos.dev](https://knemos.dev) · [GitHub](https://github.com/your-username/KnemOS)
+[knemos.dev](https://knemos.dev) · [GitHub](https://github.com/your-username/KNEMOS)
 
 </div>

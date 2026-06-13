@@ -100,7 +100,7 @@ export const ChatPanel = () => {
           <div style={{ textAlign: 'center', padding: '32px 16px' }}>
             <div style={{ fontSize: 36, fontWeight: 100, color: 'var(--ink-4)', marginBottom: 16 }}>○</div>
             <div style={{ fontSize: 13, fontWeight: 300, color: 'var(--ink-2)', marginBottom: 6 }}>
-              KnemOS AI — {mode === 'query' ? 'Live Query' : 'Memory Search'}
+              KNEMOS AI — {mode === 'query' ? 'Live Query' : 'Memory Search'}
             </div>
             <div style={{ fontSize: 11, color: 'var(--ink-3)', lineHeight: 1.7 }}>
               {mode === 'query'

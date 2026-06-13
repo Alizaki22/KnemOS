@@ -1,4 +1,4 @@
-// background.js — KnemOS Extension Service Worker
+// background.js — KNEMOS Extension Service Worker
 
 const BACKEND = 'http://127.0.0.1:8765'
 const SYNC_ALARM = 'knemos-sync'
@@ -34,7 +34,7 @@ async function syncTabs() {
   try {
     tabs = await chrome.tabs.query({})
   } catch (err) {
-    console.warn('[KnemOS] Could not query tabs:', err)
+    console.warn('[KNEMOS] Could not query tabs:', err)
     return
   }
 
