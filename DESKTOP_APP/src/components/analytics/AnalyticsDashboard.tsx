@@ -188,7 +188,6 @@ const OverviewTab = ({ totalApps, totalBrowsers, totalTabs, totalFiles, totalPro
 // ───────────────────────────────────────
 const SystemTab = ({ ramStats, categories, workspaces }: any) => {
   const allApps = [...(categories.apps || []), ...(categories.browsers || [])]
-  const activeApps = allApps.filter((a: any) => a.isActive)
   const topByMem = [...allApps].sort((a: any, b: any) => (b.memoryMb || 0) - (a.memoryMb || 0)).slice(0, 6)
 
   const totalWorkspaceItems = workspaces?.reduce((acc: number, ws: any) => acc + ws.items.length, 0) || 0
@@ -438,7 +437,7 @@ Negative factors: rapid switching, idle interruptions, entertainment apps, exces
             <RechartsTooltip 
               contentStyle={{ background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: 11 }}
               itemStyle={{ color: 'var(--ink)' }}
-              formatter={(value: number, name: string) => [name === 'score' ? value : value, name === 'score' ? 'Focus Score' : 'Context Switches']}
+              formatter={(value: any, name: any) => [name === 'score' ? value : value, name === 'score' ? 'Focus Score' : 'Context Switches']}
             />
             <Area type="monotone" dataKey="score" stroke="var(--accent)" strokeWidth={2} fillOpacity={1} fill="url(#colorScore)" />
           </AreaChart>

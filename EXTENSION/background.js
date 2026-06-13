@@ -29,7 +29,17 @@ function prepareTabs(rawTabs) {
 // ─────────────────────────────────────────
 // Core: Collect all tabs and POST to backend
 // ─────────────────────────────────────────
+let syncTimeout = null;
+
 async function syncTabs() {
+  // Debounce to prevent infinite event loops
+  if (syncTimeout) clearTimeout(syncTimeout);
+  syncTimeout = setTimeout(async () => {
+      await performSync();
+  }, 1000);
+}
+
+async function performSync() {
   let tabs
   try {
     tabs = await chrome.tabs.query({})
@@ -41,8 +51,6 @@ async function syncTabs() {
   const payload = prepareTabs(tabs)
 
   // ── Always store local tab count + sync time ──────────────────────
-  // This runs regardless of backend status so the popup always shows
-  // real data even when the desktop app is not running.
   const now = Date.now()
   await chrome.storage.local.set({
     lastCount: payload.length,
@@ -76,9 +84,10 @@ async function syncTabs() {
     }
   } catch (err) {
     // Backend not running — silent fail, mark disconnected
-    // lastCount and lastSync already written above, so popup shows data
     await chrome.storage.local.set({ status: 'disconnected' })
   }
+  
+  await syncWorkspaceTabGroups()
 }
 
 // ─────────────────────────────────────────
@@ -116,9 +125,23 @@ chrome.tabs.onActivated.addListener(() => syncTabs())
 // Tab moved (between windows)
 chrome.tabs.onMoved.addListener(() => syncTabs())
 
+// Tab Group events
+chrome.tabGroups.onRemoved.addListener((group) => {
+    chrome.storage.local.get(['tabGroupMap', 'manualUngrouped'], (data) => {
+        const map = data.tabGroupMap || {}
+        const wsId = Object.keys(map).find(k => map[k] === group.id)
+        if (wsId) {
+            const arr = data.manualUngrouped || []
+            if (!arr.includes(wsId)) {
+                arr.push(wsId)
+                chrome.storage.local.set({ manualUngrouped: arr })
+            }
+        }
+    })
+})
+
 // ─────────────────────────────────────────
 // Alarm: periodic backup sync every 30 seconds
-// This handles the case where no tab events fire for a while
 // ─────────────────────────────────────────
 chrome.alarms.create(SYNC_ALARM, { periodInMinutes: 0.5 })  // every 30s
 
@@ -142,8 +165,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.type === 'FORCE_SYNC') {
-    syncTabs().then(() => {
-      chrome.storage.local.get(['lastSync', 'lastCount', 'status'], sendResponse)
+    chrome.storage.local.set({ manualUngrouped: [] }, () => {
+      syncTabs().then(() => {
+        chrome.storage.local.get(['lastSync', 'lastCount', 'status'], sendResponse)
+      })
     })
     return true
   }
@@ -153,6 +178,112 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true
   }
 })
+
+// ─────────────────────────────────────────
+// Tab Group Synchronization (Phase 2-9)
+// ─────────────────────────────────────────
+let isSyncingGroups = false
+
+function mapColor(c) {
+    const valid = ['grey', 'blue', 'red', 'yellow', 'green', 'pink', 'purple', 'cyan', 'orange']
+    return valid.includes(c) ? c : 'grey'
+}
+
+async function syncWorkspaceTabGroups() {
+  if (isSyncingGroups) return
+  isSyncingGroups = true
+  try {
+    const { knemosToken } = await chrome.storage.local.get(['knemosToken'])
+    const headers = { 'Content-Type': 'application/json' }
+    if (knemosToken) headers['Authorization'] = `Bearer ${knemosToken}`
+    
+    const res = await fetch(`${BACKEND}/api/workspace/user-workspaces`, {
+      signal: AbortSignal.timeout(5000), headers
+    })
+    if (!res.ok) throw new Error('Backend unreachable')
+    
+    const data = await res.json()
+    const workspaces = data.workspaces || []
+    const ungroupRequests = data.ungroup_requests || []
+    
+    const { tabGroupMap = {}, manualUngrouped = [] } = await chrome.storage.local.get(['tabGroupMap', 'manualUngrouped'])
+    const tabs = await chrome.tabs.query({})
+    let updatedMap = { ...tabGroupMap }
+    
+    const existingGroups = await chrome.tabGroups.query({})
+    const existingGroupIds = existingGroups.map(g => g.id)
+
+    // Handle Safe Ungrouping requests
+    for (const wsId of ungroupRequests) {
+        const groupId = updatedMap[wsId]
+        if (groupId && existingGroupIds.includes(groupId)) {
+            const groupTabs = await chrome.tabs.query({ groupId })
+            if (groupTabs.length > 0) {
+                await chrome.tabs.ungroup(groupTabs.map(t => t.id))
+            }
+        }
+        delete updatedMap[wsId]
+    }
+
+    // Cleanup stale mappings
+    for (const [wsId, groupId] of Object.entries(updatedMap)) {
+      if (!existingGroupIds.includes(groupId)) delete updatedMap[wsId]
+    }
+
+    for (const ws of workspaces) {
+        if (ws.auto_sync_tabs === false) continue
+        
+        let tabIds = []
+        if (ws.items && Array.isArray(ws.items)) {
+            for (const item of ws.items) {
+                if (item.categoryType === 'tabs' && item.url) {
+                    try {
+                        const urlObj = new URL(item.url)
+                        const domain = urlObj.hostname
+                        const path = urlObj.pathname
+                        const matchedTabs = tabs.filter(t => t.url && t.url.includes(domain) && t.url.includes(path))
+                        tabIds.push(...matchedTabs.map(t => t.id))
+                    } catch(e) {}
+                }
+            }
+        }
+        
+        tabIds = [...new Set(tabIds)]
+        if (tabIds.length > 0) {
+            let groupId = updatedMap[ws.id]
+            if (!groupId || !existingGroupIds.includes(groupId)) {
+                if (manualUngrouped.includes(ws.id)) continue
+                groupId = await chrome.tabs.group({ tabIds })
+                updatedMap[ws.id] = groupId
+                await chrome.tabGroups.update(groupId, {
+                    title: ws.name,
+                    color: mapColor(ws.color)
+                })
+            } else {
+                const currentGroupTabs = await chrome.tabs.query({ groupId })
+                const currentGroupTabIds = currentGroupTabs.map(t => t.id)
+                
+                const needsAdd = tabIds.some(id => !currentGroupTabIds.includes(id))
+                if (needsAdd) {
+                    await chrome.tabs.group({ groupId, tabIds })
+                }
+                
+                const groupInfo = existingGroups.find(g => g.id === groupId)
+                if (groupInfo && (groupInfo.title !== ws.name || groupInfo.color !== mapColor(ws.color))) {
+                    await chrome.tabGroups.update(groupId, {
+                        title: ws.name,
+                        color: mapColor(ws.color)
+                    })
+                }
+            }
+        }
+    }
+    await chrome.storage.local.set({ tabGroupMap: updatedMap })
+  } catch (e) {
+  } finally {
+    isSyncingGroups = false
+  }
+}
 
 // ─────────────────────────────────────────
 // Initial sync on service worker start

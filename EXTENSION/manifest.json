@@ -6,6 +6,7 @@
 
   "permissions": [
     "tabs",
+    "tabGroups",
     "storage",
     "alarms"
   ],

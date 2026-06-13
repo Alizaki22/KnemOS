@@ -46,9 +46,17 @@ def _init_db():
             name        TEXT,
             items_json  TEXT,
             created_at  INTEGER,
-            is_pinned   INTEGER DEFAULT 0
+            is_pinned   INTEGER DEFAULT 0,
+            color       TEXT DEFAULT 'grey',
+            auto_sync_tabs INTEGER DEFAULT 1
         )
     """)
+    try:
+        conn.execute("ALTER TABLE user_workspaces ADD COLUMN color TEXT DEFAULT 'grey'")
+    except: pass
+    try:
+        conn.execute("ALTER TABLE user_workspaces ADD COLUMN auto_sync_tabs INTEGER DEFAULT 1")
+    except: pass
     conn.commit()
     conn.close()
 
@@ -61,6 +69,8 @@ _cache: dict = {"workspaces": [], "updated_at": 0}
 class UserWorkspace(BaseModel):
     name: str
     items: Optional[list] = []
+    color: Optional[str] = "grey"
+    auto_sync_tabs: Optional[bool] = True
 
 
 def _save_workspaces_to_db(workspaces: list[dict]):
@@ -100,7 +110,7 @@ def _load_user_workspaces() -> list[dict]:
     try:
         conn = sqlite3.connect(DB_PATH)
         rows = conn.execute(
-            "SELECT id, name, items_json, created_at, is_pinned FROM user_workspaces ORDER BY is_pinned DESC, created_at ASC"
+            "SELECT id, name, items_json, created_at, is_pinned, color, auto_sync_tabs FROM user_workspaces ORDER BY is_pinned DESC, created_at ASC"
         ).fetchall()
         conn.close()
         return [
@@ -110,6 +120,8 @@ def _load_user_workspaces() -> list[dict]:
                 "items": json.loads(r[2]) if r[2] else [],
                 "created_at": r[3],
                 "is_pinned": bool(r[4]),
+                "color": r[5] or "grey",
+                "auto_sync_tabs": bool(r[6]),
                 "is_user_defined": True
             }
             for r in rows
@@ -287,10 +299,14 @@ async def get_categories():
     }
 
 
+_ungroup_requests = set()
+
 @router.get("/user-workspaces")
 async def get_user_workspaces():
     """Return user-defined workspaces."""
-    return {"workspaces": _load_user_workspaces()}
+    res = {"workspaces": _load_user_workspaces(), "ungroup_requests": list(_ungroup_requests)}
+    _ungroup_requests.clear()
+    return res
 
 
 @router.post("/user-workspaces")
@@ -300,8 +316,8 @@ async def create_user_workspace(ws: UserWorkspace):
     try:
         conn = sqlite3.connect(DB_PATH)
         conn.execute(
-            "INSERT INTO user_workspaces (id, name, items_json, created_at) VALUES (?, ?, ?, ?)",
-            (ws_id, ws.name, json.dumps(ws.items), int(time.time()))
+            "INSERT INTO user_workspaces (id, name, items_json, created_at, color, auto_sync_tabs) VALUES (?, ?, ?, ?, ?, ?)",
+            (ws_id, ws.name, json.dumps(ws.items), int(time.time()), ws.color, int(ws.auto_sync_tabs))
         )
         conn.commit()
         conn.close()
@@ -317,8 +333,8 @@ async def update_user_workspace(ws_id: str, ws: UserWorkspace):
     try:
         conn = sqlite3.connect(DB_PATH)
         conn.execute(
-            "UPDATE user_workspaces SET name = ?, items_json = ? WHERE id = ?",
-            (ws.name, json.dumps(ws.items), ws_id)
+            "UPDATE user_workspaces SET name = ?, items_json = ?, color = ?, auto_sync_tabs = ? WHERE id = ?",
+            (ws.name, json.dumps(ws.items), ws.color, int(ws.auto_sync_tabs), ws_id)
         )
         conn.commit()
         conn.close()
@@ -328,13 +344,15 @@ async def update_user_workspace(ws_id: str, ws: UserWorkspace):
 
 
 @router.delete("/user-workspaces/{ws_id}")
-async def delete_user_workspace(ws_id: str):
+async def delete_user_workspace(ws_id: str, ungroup: bool = False):
     """Delete a user workspace."""
     try:
         conn = sqlite3.connect(DB_PATH)
         conn.execute("DELETE FROM user_workspaces WHERE id = ?", (ws_id,))
         conn.commit()
         conn.close()
+        if ungroup:
+            _ungroup_requests.add(ws_id)
         return {"status": "deleted"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
