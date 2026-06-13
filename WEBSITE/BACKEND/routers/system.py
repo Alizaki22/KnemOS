@@ -38,21 +38,24 @@ async def ram():
 
 @router.get("/windows")
 async def windows():
-    items = get_open_windows()
+    import asyncio
+    items = await asyncio.to_thread(get_open_windows)
     return {"windows": [i.model_dump() for i in items]}
 
 
 @router.get("/processes")
 async def processes():
     """Return list of running processes with CPU and memory usage."""
-    procs = get_processes()
+    import asyncio
+    procs = await asyncio.to_thread(get_processes)
     return {"processes": procs}
 
 
 @router.get("/focus")
 async def focus():
     """Return current cognitive focus score - was previously missing (404)."""
-    return compute_focus_score()
+    import asyncio
+    return await asyncio.to_thread(compute_focus_score)
 
 
 @router.post("/browser-tabs")

@@ -1,7 +1,8 @@
 'use client'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import Image from 'next/image'
+import Link from 'next/link'
 
 export default function AuthPage() {
   const [email, setEmail] = useState('')
@@ -9,7 +10,6 @@ export default function AuthPage() {
   const [sent, setSent] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
   const supabase = createClient()
-  const router = useRouter()
 
   const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -28,30 +28,28 @@ export default function AuthPage() {
       } else {
         setSent(true)
       }
-    } catch (err: any) {
-      if (err.message === 'Failed to fetch') {
+    } catch (err: unknown) {
+      if (err instanceof Error && err.message === 'Failed to fetch') {
         setErrorMsg('Network error: Please verify your NEXT_PUBLIC_SUPABASE_URL in .env.local')
-      } else {
+      } else if (err instanceof Error) {
         setErrorMsg(err.message || 'An unexpected error occurred')
+      } else {
+        setErrorMsg('An unexpected error occurred')
       }
     } finally {
       setLoading(false)
     }
   }
 
-  const handleGoogle = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` }
-    })
-  }
-
   return (
-    <main className="min-h-screen bg-white flex items-center justify-center px-6">
+    <main className="min-h-screen bg-white flex items-center justify-center px-6 relative">
+      <Link href="/" className="absolute top-8 left-8 text-xs font-bold tracking-[2px] uppercase hover:text-[#888] transition-colors flex items-center gap-2 text-black">
+        <span>←</span> Back to Home
+      </Link>
       <div className="w-full max-w-sm">
 
         <div className="flex items-center gap-2 justify-center mb-10">
-          <img src="/logo.svg" alt="KNEMOS" className="w-8 h-8" />
+          <Image src="/KNEMOS.png" alt="KNEMOS" width={32} height={32} className="w-8 h-8" />
           <span className="font-bold text-lg tracking-widest text-black">KNEMOS</span>
         </div>
 
@@ -88,18 +86,10 @@ export default function AuthPage() {
               </button>
             </form>
 
-            <div className="my-6 flex items-center gap-3">
-              <div className="flex-1 h-px bg-[#E8E8E8]" />
-              <span className="text-xs text-[#888]">or</span>
-              <div className="flex-1 h-px bg-[#E8E8E8]" />
-            </div>
-
-            <button
-              onClick={handleGoogle}
-              className="w-full border border-[#E0E0E0] py-3 text-sm text-[#444] hover:border-black transition-colors bg-white"
-            >
-              Continue with Google
-            </button>
+            <p className="text-center text-xs text-[#888] mt-6">
+              Don&apos;t have an account?{' '}
+              <Link href="/signup" className="text-black underline">Sign up</Link>
+            </p>
           </>
         )}
       </div>

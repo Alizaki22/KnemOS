@@ -52,9 +52,15 @@ async function syncTabs() {
   if (payload.length === 0) return
 
   try {
+    const { knemosToken } = await chrome.storage.local.get(['knemosToken'])
+    const headers = { 'Content-Type': 'application/json' }
+    if (knemosToken) {
+      headers['Authorization'] = `Bearer ${knemosToken}`
+    }
+
     const response = await fetch(`${BACKEND}/api/system/browser-tabs`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ tabs: payload }),
       signal: AbortSignal.timeout(5000)  // 5 second timeout
     })

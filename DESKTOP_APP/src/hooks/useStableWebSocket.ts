@@ -100,6 +100,9 @@ export const useStableWebSocket = () => {
     return () => {
       if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current)
       if (pingIntervalRef.current) clearInterval(pingIntervalRef.current)
+      
+      isConnectingRef.current = false // CRITICAL: Reset connecting state on unmount for StrictMode compatibility
+      
       if (wsRef.current) {
         wsRef.current.onclose = null // prevent reconnect logic on unmount
         wsRef.current.close()

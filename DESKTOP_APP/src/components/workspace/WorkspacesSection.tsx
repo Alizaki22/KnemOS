@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useWorkspaceStore, UserWorkspace, WorkspaceItem } from '../../store/workspace.store'
 import { WorkspacePreviewModal } from './WorkspacePreviewModal'
 import { AISuggestionsModal } from './AISuggestionsModal'
-import { useDroppable } from '@dnd-kit/core'
+import { useDroppable, useDraggable } from '@dnd-kit/core'
 
 interface Props {
   onDragItem: WorkspaceItem | null
@@ -126,7 +126,7 @@ export const WorkspacesSection = ({ onDragItem }: Props) => {
               style={{
                 padding: '6px 12px',
                 background: 'var(--ink)',
-                color: '#fff',
+                color: 'var(--bg)',
                 border: 'none',
                 borderRadius: 'var(--r-sm)',
                 fontSize: 11,
@@ -155,6 +155,39 @@ export const WorkspacesSection = ({ onDragItem }: Props) => {
   )
 }
 
+
+
+const DraggablePreviewItem = ({ item, workspaceId }: { item: WorkspaceItem, workspaceId: string }) => {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: `ws-${workspaceId}-item-${item.id}`,
+    data: { item, sourceWorkspaceId: workspaceId }
+  })
+
+  return (
+    <span
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      style={{
+        fontSize: 9,
+        background: 'var(--bg-hover)',
+        padding: '2px 6px',
+        borderRadius: 4,
+        color: 'var(--ink-2)',
+        maxWidth: 80,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        border: '1px solid var(--border)',
+        opacity: isDragging ? 0.5 : 1,
+        cursor: 'grab',
+        touchAction: 'none'
+      }}
+    >
+      {item.title}
+    </span>
+  )
+}
 
 interface WorkspaceCardProps {
   workspace: UserWorkspace
@@ -251,23 +284,7 @@ const WorkspaceCard = ({
         ) : (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
             {workspace.items.slice(0, 6).map((item) => (
-              <span
-                key={item.id}
-                style={{
-                  fontSize: 9,
-                  background: 'var(--bg-hover)',
-                  padding: '2px 6px',
-                  borderRadius: 4,
-                  color: 'var(--ink-2)',
-                  maxWidth: 80,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  border: '1px solid var(--border)',
-                }}
-              >
-                {item.title}
-              </span>
+              <DraggablePreviewItem key={item.id} item={item} workspaceId={workspace.id} />
             ))}
             {itemCount > 6 && (
               <span style={{ fontSize: 9, color: 'var(--ink-4)', padding: '2px 0' }}>

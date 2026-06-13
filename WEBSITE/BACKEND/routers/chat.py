@@ -156,14 +156,15 @@ async def chat_endpoint(req: ChatRequest):
     Main chat endpoint. Routes to query or RAG mode.
     Connects to local Qwen2.5 via Ollama.
     """
+    import asyncio
     mode = req.mode or "query"
 
     if mode == "rag":
-        system_prompt = _build_rag_context(req.message)
+        system_prompt = await asyncio.to_thread(_build_rag_context, req.message)
     else:
-        system_prompt = _build_system_context_query()
+        system_prompt = await asyncio.to_thread(_build_system_context_query)
 
-    reply = _call_ollama(system_prompt, req.message, req.history)
+    reply = await asyncio.to_thread(_call_ollama, system_prompt, req.message, req.history)
 
     return {
         "reply": reply,
@@ -180,7 +181,8 @@ async def chat_endpoint(req: ChatRequest):
 async def chat_status():
     """Check if Ollama and the chat model are available."""
     try:
-        resp = requests.get(f"{OLLAMA_URL}/api/tags", timeout=3)
+        import asyncio
+        resp = await asyncio.to_thread(requests.get, f"{OLLAMA_URL}/api/tags", timeout=3)
         if resp.status_code == 200:
             models = [m.get("name", "") for m in resp.json().get("models", [])]
             model_available = any(CHAT_MODEL in m for m in models)

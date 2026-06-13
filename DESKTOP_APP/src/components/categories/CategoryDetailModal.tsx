@@ -42,7 +42,7 @@ export const CategoryDetailModal = ({ categoryType }: Props) => {
           {[
             { label: 'Total', value: items.length },
             { label: 'Active', value: activeCount },
-            { label: 'Memory', value: `${(totalMem / 1024).toFixed(1)} GB` },
+            { label: 'Memory', value: totalMem > 0 ? `${(totalMem / 1024).toFixed(1)} GB` : '—' },
           ].map((s) => (
             <div key={s.label} style={{ background: 'var(--bg-panel)', padding: '16px 18px' }}>
               <div style={{ fontSize: 28, fontWeight: 100, letterSpacing: -1 }}>{s.value}</div>

@@ -1,4 +1,5 @@
 'use client'
+import Image from 'next/image'
 
 export const Footer = () => (
   <footer className="bg-white border-t-2 border-black pt-16 overflow-hidden flex flex-col justify-between relative">
@@ -8,7 +9,7 @@ export const Footer = () => (
       {/* Brand */}
       <div className="flex flex-col gap-6">
         <div className="flex items-center gap-4">
-          <img src="/KNEMOS.png" alt="KNEMOS Logo" className="w-8 h-8 object-contain" />
+          <Image src="/KNEMOS.png" alt="KNEMOS Logo" width={32} height={32} className="w-8 h-8 object-contain" />
           <div className="w-[10px] h-[10px] bg-black"></div>
           <span className="text-2xl font-bold tracking-[-1px] font-display text-black">KNEMOS</span>
         </div>

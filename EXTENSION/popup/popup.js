@@ -22,11 +22,18 @@ const tabsBtn        = document.getElementById('tabsBtn')
 const settingsBtn    = document.getElementById('settingsBtn')
 const tabsBackBtn    = document.getElementById('tabsBackBtn')
 const settingsBackBtn = document.getElementById('settingsBackBtn')
+const loginBackBtn   = document.getElementById('loginBackBtn')
 
 // Views
 const viewStatus     = document.getElementById('viewStatus')
 const viewTabs       = document.getElementById('viewTabs')
 const viewSettings   = document.getElementById('viewSettings')
+const viewLogin      = document.getElementById('viewLogin')
+
+// Login
+const tokenInput     = document.getElementById('tokenInput')
+const saveTokenBtn   = document.getElementById('saveTokenBtn')
+const loginMessage   = document.getElementById('loginMessage')
 
 // Tabs view
 const tabsList       = document.getElementById('tabsList')
@@ -135,13 +142,23 @@ function showView(view) {
   viewStatus.classList.toggle('hidden', view !== 'status')
   viewTabs.classList.toggle('hidden', view !== 'tabs')
   viewSettings.classList.toggle('hidden', view !== 'settings')
+  viewLogin.classList.toggle('hidden', view !== 'login')
 
   tabsBtn.classList.toggle('active', view === 'tabs')
   settingsBtn.classList.toggle('active', view === 'settings')
+  document.getElementById('accountBtn')?.classList.toggle('active', view === 'login')
 
   currentView = view
 
   if (view === 'tabs') renderTabsList()
+  
+  if (view === 'login') {
+    chrome.storage.local.get(['knemosToken'], data => {
+      if (data.knemosToken) {
+        tokenInput.value = data.knemosToken
+      }
+    })
+  }
 }
 
 // ── Status UI update ──────────────────────
@@ -290,9 +307,30 @@ settingsBtn.addEventListener('click', () => {
   showView(currentView === 'settings' ? 'status' : 'settings')
 })
 
+const accountBtn = document.getElementById('accountBtn')
+if (accountBtn) {
+  accountBtn.addEventListener('click', () => {
+    showView(currentView === 'login' ? 'status' : 'login')
+  })
+}
+
 // Back buttons inside each view
 tabsBackBtn.addEventListener('click', () => showView('status'))
 settingsBackBtn.addEventListener('click', () => showView('status'))
+loginBackBtn.addEventListener('click', () => showView('status'))
+
+// ── Login logic ───────────────────────────
+saveTokenBtn.addEventListener('click', () => {
+  const token = tokenInput.value.trim()
+  chrome.storage.local.set({ knemosToken: token }, () => {
+    saveTokenBtn.textContent = 'Saved ✓'
+    loginMessage.textContent = 'Token saved. Your session is now linked.'
+    setTimeout(() => { 
+      saveTokenBtn.textContent = 'Save Token'
+      loginMessage.textContent = ''
+    }, 2000)
+  })
+})
 
 // ── Settings: mode toggle ─────────────────
 modeLight.addEventListener('click', () => {

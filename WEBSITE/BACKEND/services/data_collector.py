@@ -26,7 +26,9 @@ def get_open_windows() -> List[WorkspaceItem]:
     seen = set()
     exe_memory = {}
     pid_info = {}
+    import time
     for proc in psutil.process_iter(['pid', 'name', 'exe', 'memory_info']):
+        time.sleep(0.001)  # Release GIL to prevent starving asyncio
         try:
             info = proc.info
             name = (info.get('name') or '').lower()
@@ -44,10 +46,22 @@ def get_open_windows() -> List[WorkspaceItem]:
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             pass
 
+    import ctypes
+    
+    def get_window_text_safe(hwnd):
+        length = ctypes.windll.user32.SendMessageTimeoutW(hwnd, 0x000E, 0, 0, 2, 50, None)
+        if length == 0:
+            return ""
+        buf = ctypes.create_unicode_buffer(255)
+        res = ctypes.windll.user32.SendMessageTimeoutW(hwnd, 0x000D, 255, buf, 2, 50, None)
+        if res == 0:
+            return ""
+        return buf.value.strip()
+
     def enum_handler(hwnd, _):
         if not win32gui.IsWindowVisible(hwnd):
             return
-        title = win32gui.GetWindowText(hwnd).strip()
+        title = get_window_text_safe(hwnd)
         if not title or title in IGNORED_TITLES or title in seen:
             return
         seen.add(title)
@@ -77,8 +91,10 @@ def get_open_windows() -> List[WorkspaceItem]:
 def get_processes() -> list[dict]:
     """Return top 30 running processes by memory usage."""
     procs = []
+    import time
     try:
         for proc in psutil.process_iter(['pid', 'name', 'memory_info', 'cpu_percent', 'status']):
+            time.sleep(0.001)  # Release GIL to prevent starving asyncio
             try:
                 info = proc.info
                 mem_mb = round(info['memory_info'].rss / (1024 * 1024), 1) if info.get('memory_info') else 0

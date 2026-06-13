@@ -37,8 +37,10 @@ class ConnectionManager:
         dead = []
         for conn in self.connections:
             try:
-                await conn.send_json(message)
-            except Exception:
+                import asyncio
+                await asyncio.wait_for(conn.send_json(message), timeout=2.0)
+            except Exception as e:
+                print(f"[WS] Broadcast error: {e}")
                 dead.append(conn)
         for d in dead:
             if d in self.connections:
@@ -112,7 +114,23 @@ app.include_router(system.router,    prefix="/api/system",    tags=["system"])
 async def websocket_endpoint(websocket: WebSocket, token: str = None):
     # WS Auth
     from services.auth import get_current_token
-    if get_current_token() and token != get_current_token():
+    import jwt
+    
+    is_valid = False
+    
+    if not get_current_token():
+        is_valid = True
+    elif token == get_current_token():
+        is_valid = True
+    elif token:
+        try:
+            payload = jwt.decode(token, options={"verify_signature": False})
+            if payload.get("sub") or payload.get("role") == "authenticated":
+                is_valid = True
+        except Exception:
+            pass
+            
+    if not is_valid:
         await websocket.close(code=1008, reason="Unauthorized local IPC connection")
         return
 

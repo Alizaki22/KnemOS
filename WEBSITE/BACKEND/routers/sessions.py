@@ -29,14 +29,15 @@ _current_session = {
 @router.get("/current")
 async def current_session():
     """Return current active session info."""
+    import asyncio
     now = int(time.time())
     duration_secs = now - _current_session["start_time"]
     duration_mins = duration_secs // 60
 
     # Get live data for current session context
-    windows = get_open_windows()
-    tabs = get_browser_tabs()
-    focus = compute_focus_score()
+    windows = await asyncio.to_thread(get_open_windows)
+    tabs = await asyncio.to_thread(get_browser_tabs)
+    focus = await asyncio.to_thread(compute_focus_score)
 
     _current_session["app_count"] = len(windows)
     _current_session["tab_count"] = len(tabs)
@@ -63,12 +64,18 @@ async def current_session():
 async def list_sessions():
     """Return sessions from the last 7 days."""
     try:
-        conn = sqlite3.connect(DB_PATH)
-        rows = conn.execute(
-            """SELECT id, start_time, end_time, dominant_app, item_count, focus_score, interruptions, summary
-               FROM sessions ORDER BY start_time DESC LIMIT 20"""
-        ).fetchall()
-        conn.close()
+        import asyncio
+        
+        def _get_sessions():
+            conn = sqlite3.connect(DB_PATH)
+            rows = conn.execute(
+                """SELECT id, start_time, end_time, dominant_app, item_count, focus_score, interruptions, summary
+                   FROM sessions ORDER BY start_time DESC LIMIT 20"""
+            ).fetchall()
+            conn.close()
+            return rows
+            
+        rows = await asyncio.to_thread(_get_sessions)
         sessions = [
             {
                 "id": r[0],

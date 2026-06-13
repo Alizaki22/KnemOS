@@ -15,6 +15,9 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "KNEMOS - Semantic Workspace OS",
   description: "AI-Powered Semantic Workspace Operating System",
+  icons: {
+    icon: "/KNEMOS.png"
+  }
 };
 
 export default function RootLayout({

@@ -136,8 +136,22 @@ def start_scheduler(ws_manager):
     @scheduler.scheduled_job('interval', seconds=10, id='categories', max_instances=1)
     async def categories_job():
         try:
-            cats = await asyncio.to_thread(get_all_items_categorized)
-            await event_bus.emit("categories_update", cats)
+            loop = asyncio.get_running_loop()
+            def _cat_sync_wrapper():
+                try:
+                    cats = get_all_items_categorized()
+                    asyncio.run_coroutine_threadsafe(
+                        event_bus.emit("categories_update", cats),
+                        loop
+                    )
+                except Exception as e:
+                    print(f"[Categories Worker] Error: {e}")
+
+            if task_queue is not None:
+                await task_queue.put((_cat_sync_wrapper, ()))
+            else:
+                cats = await asyncio.to_thread(get_all_items_categorized)
+                await event_bus.emit("categories_update", cats)
         except asyncio.CancelledError:
             pass
         except Exception as e:

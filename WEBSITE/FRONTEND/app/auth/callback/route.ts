@@ -10,9 +10,9 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error && data.session) {
-      // After successful auth, redirect to download page
-      // The download page will show the deep link to open the desktop app
-      return NextResponse.redirect(`${origin}/download?token=${data.session.access_token}`)
+      // After successful auth, redirect to signin page with token
+      // The signin page will show the token for the user to copy
+      return NextResponse.redirect(`${origin}/signin?token=${data.session.access_token}`)
     }
   }
 

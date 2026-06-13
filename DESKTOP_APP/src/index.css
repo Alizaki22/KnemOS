@@ -104,7 +104,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0 16px 0 0;
-  background: rgba(255,255,255,0.98);
+  background: var(--bg-panel);
   backdrop-filter: blur(10px);
   border-bottom: 2px solid var(--ink);
   flex-shrink: 0;
@@ -277,7 +277,7 @@ body {
 
 .sidebar-nav-item.active {
   background: var(--ink);
-  color: #fff;
+  color: var(--bg);
   border-color: var(--ink);
 }
 
@@ -311,8 +311,8 @@ body {
 }
 
 .sidebar-nav-item.active .sidebar-nav-badge {
-  background: rgba(255,255,255,0.2);
-  color: #fff;
+  background: rgba(128,128,128,0.25);
+  color: var(--accent);
 }
 
 .sidebar-divider {
@@ -635,7 +635,7 @@ body {
   gap: 8px;
   padding: 10px 24px;
   background: var(--ink);
-  color: #fff;
+  color: var(--bg);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 2px;
@@ -731,7 +731,7 @@ body {
   --color-surface-2:   var(--bg-secondary);
   --color-surface-3:   var(--hover-bg);
   background: var(--ink);
-  color: #fff;
+  color: var(--bg);
   border: none;
   border-radius: var(--r-sm);
   font-size: 11px;
@@ -818,7 +818,7 @@ body {
 
 .chat-message.user .chat-message-avatar {
   background: var(--ink);
-  color: #fff;
+  color: var(--bg);
   border-color: var(--ink);
 }
 
@@ -836,7 +836,7 @@ body {
 
 .chat-message.user .chat-bubble {
   background: var(--ink);
-  color: #fff;
+  color: var(--bg);
   border-color: var(--ink);
 }
 
@@ -849,7 +849,7 @@ body {
 }
 
 .chat-message.user .chat-bubble-time {
-  color: rgba(255,255,255,0.5);
+  color: var(--ink-3);
 }
 
 .chat-input-area {
@@ -895,7 +895,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--bg);
   font-size: 14px;
   transition: background 0.2s;
 }
@@ -1190,7 +1190,7 @@ body {
   position: absolute;
   width: 16px;
   height: 16px;
-  background: #fff;
+  background: var(--bg-panel);
   border-radius: 50%;
   top: 3px;
   left: 3px;
@@ -1236,7 +1236,7 @@ body {
 
 .test-btn:hover {
   background: var(--ink);
-  color: #fff;
+  color: var(--bg);
   border-color: var(--ink);
 }
 
@@ -1330,21 +1330,21 @@ body {
 
 .floating-circle {
   position: absolute;
-  border: 1px solid rgba(0,0,0,0.06);
+  border: 1px solid var(--border);
   border-radius: 50%;
   animation: floatUp 18s ease-in-out infinite;
 }
 
 .floating-square {
   position: absolute;
-  background: rgba(0,0,0,0.04);
+  background: var(--border);
   animation: floatDiagonal 25s linear infinite;
 }
 
 .floating-line-h {
   position: absolute;
   height: 1px;
-  background: rgba(0,0,0,0.06);
+  background: var(--border);
   animation: expandContract 10s ease-in-out infinite;
   transform-origin: center;
 }
@@ -1471,7 +1471,7 @@ body {
   gap: 6px;
   padding: 4px 12px;
   background: var(--ink);
-  color: #fff;
+  color: var(--bg);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 2px;
@@ -1512,7 +1512,7 @@ body {
   top: calc(var(--titlebar-h) + 12px);
   right: 16px;
   background: var(--ink);
-  color: #fff;
+  color: var(--bg);
   padding: 10px 16px;
   border-radius: var(--r-md);
   font-size: 12px;
@@ -1525,7 +1525,7 @@ body {
 /* Scrollbar global */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(0,0,0,0.15) transparent;
+  scrollbar-color: var(--border) transparent;
 }
 
 /* Reduced motion */
@@ -1534,4 +1534,74 @@ body {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* =============================================
+   RESPONSIVE LAYOUT — Fluid workspace behavior
+   ============================================= */
+
+/* Main content min-width protection */
+.main-content {
+  min-width: 0;
+  word-break: break-word;
+}
+
+/* Expanded card responsive: don't span 2 if very narrow */
+@media (max-width: 700px) {
+  .expanded-card {
+    grid-column: span 1;
+  }
+  .category-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Workspace section responsive */
+.workspace-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+  gap: 16px;
+}
+
+/* Analytics panel responsive */
+.analytics-stat-number {
+  font-size: clamp(24px, 4vw, 40px);
+}
+
+/* Focus score bar responsive */
+.focus-score-bar {
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Analytics table responsive */
+.analytics-app-table {
+  overflow-x: auto;
+}
+
+/* Responsive sidebar — hide on very small */
+@media (max-width: 600px) {
+  :root {
+    --sidebar-w: 0px;
+  }
+  .sidebar {
+    display: none;
+  }
+}
+
+/* Focus score layout fix */
+.focus-score-row {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+/* Wolfram tab cards */
+.wolfram-card {
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Prevent analytics grid from overflowing */
+.analytics-stats-grid {
+  overflow-x: auto;
 }

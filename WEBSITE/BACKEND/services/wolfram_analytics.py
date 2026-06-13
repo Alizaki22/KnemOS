@@ -77,12 +77,24 @@ def log_ram_snapshot(used_gb: float, percent: float):
     conn.close()
 
 
-def _compute_score_python(switch_count: int, hours_active: float) -> dict:
+def _compute_score_python(events: list) -> dict:
     """Pure Python focus score computation  always available."""
-    penalty = min(40, switch_count * 2)
-    base = 80 if hours_active > 3 else 60
-    score = max(0, base - penalty)
-    grade = "A" if score >= 80 else "B" if score >= 60 else "C"
+    switches = [e for e in events if e[0] == 'switch']
+    switch_count = len(switches)
+    hours_active = min(8.0, len(events) * 0.15)
+    deep_focus = len([e for e in events if e[0] == 'focus_activate'])
+    
+    base = 50 + (hours_active * 5) + (deep_focus * 10)
+    penalty = switch_count * 1.5
+    
+    score = max(0, min(100, int(base - penalty)))
+    
+    if score >= 90: grade = "S"
+    elif score >= 80: grade = "A"
+    elif score >= 65: grade = "B"
+    elif score >= 50: grade = "C"
+    else: grade = "D"
+    
     trend = "improving" if score > 70 else "stable" if score > 50 else "declining"
     return {
         "score": score,
@@ -93,11 +105,16 @@ def _compute_score_python(switch_count: int, hours_active: float) -> dict:
     }
 
 
-def _compute_score_wolfram(switch_count: int, hours_active: float) -> dict | None:
+def _compute_score_wolfram(events: list) -> dict | None:
     """
     Wolfram Engine focus score  richer analytics.
     Returns None if Wolfram Engine is not available/activated.
     """
+    switches = [e for e in events if e[0] == 'switch']
+    switch_count = len(switches)
+    hours_active = min(8.0, len(events) * 0.15)
+    deep_focus = len([e for e in events if e[0] == 'focus_activate'])
+
     try:
         from services.wolfram_engine import wolfram_service
         from wolframclient.language import wl
@@ -120,9 +137,13 @@ def _compute_score_wolfram(switch_count: int, hours_active: float) -> dict | Non
         # We do not terminate the session here because it is a reused singleton
 
         penalty = float(str(penalty_wl))
-        base = 85 if hours_active > 4 else 75 if hours_active > 2 else 60
-        score = max(0, min(100, int(base - penalty)))
-        grade = "A" if score >= 80 else "B" if score >= 60 else "C"
+        base_score = 50 + (hours_active * 5) + (deep_focus * 10)
+        score = max(0, min(100, int(base_score - penalty)))
+        if score >= 90: grade = "S"
+        elif score >= 80: grade = "A"
+        elif score >= 65: grade = "B"
+        elif score >= 50: grade = "C"
+        else: grade = "D"
         trend = "improving" if score > 70 else "stable" if score > 50 else "declining"
 
         return {
@@ -150,17 +171,13 @@ def compute_focus_score() -> dict:
     ).fetchall()
     conn.close()
 
-    switches = [e for e in events if e[0] == 'switch']
-    switch_count = len(switches)
-    hours_active = min(8.0, len(events) * 0.15)
-
     # Try Wolfram Engine first
-    wolfram_result = _compute_score_wolfram(switch_count, hours_active)
+    wolfram_result = _compute_score_wolfram(events)
     if wolfram_result:
         return wolfram_result
 
     # Python fallback
-    return _compute_score_python(switch_count, hours_active)
+    return _compute_score_python(events)
 
 
 def get_heatmap() -> list[dict]:

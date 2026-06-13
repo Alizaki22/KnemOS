@@ -130,7 +130,7 @@ export const OnboardingModal = ({ onComplete }: Props) => {
           <div style={{ marginBottom: 8 }}>
             <div style={{
               background: 'var(--ink)',
-              color: '#fff',
+              color: 'var(--bg)',
               padding: '12px 16px',
               borderRadius: 'var(--r-sm)',
               fontSize: 12,
@@ -172,7 +172,7 @@ export const OnboardingModal = ({ onComplete }: Props) => {
               style={{
                 padding: '12px 32px',
                 background: 'var(--ink)',
-                color: '#fff',
+                color: 'var(--bg)',
                 border: 'none',
                 borderRadius: 'var(--r-sm)',
                 fontSize: 11,
@@ -190,7 +190,7 @@ export const OnboardingModal = ({ onComplete }: Props) => {
               style={{
                 padding: '12px 32px',
                 background: 'var(--ink)',
-                color: '#fff',
+                color: 'var(--bg)',
                 border: 'none',
                 borderRadius: 'var(--r-sm)',
                 fontSize: 11,

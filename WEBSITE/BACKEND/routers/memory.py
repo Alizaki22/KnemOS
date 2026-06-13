@@ -13,19 +13,22 @@ class SearchRequest(BaseModel):
 
 @router.post("/search")
 async def search(req: SearchRequest):
-    results = search_memory(req.query, req.limit)
+    import asyncio
+    results = await asyncio.to_thread(search_memory, req.query, req.limit)
     return {"results": results}
 
 
 @router.get("/screenshots")
 async def screenshots():
-    items = list_screenshots(limit=50)
+    import asyncio
+    items = await asyncio.to_thread(list_screenshots, limit=50)
     return {"screenshots": items, "total": len(items)}
 
 
 @router.post("/capture")
 async def force_capture():
-    screenshot_id = capture_and_index()
+    import asyncio
+    screenshot_id = await asyncio.to_thread(capture_and_index)
     return {
         "status": "captured" if screenshot_id else "skipped",
         "screenshot_id": screenshot_id or "skipped"

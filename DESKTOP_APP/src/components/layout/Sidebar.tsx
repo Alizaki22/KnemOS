@@ -51,12 +51,12 @@ export const Sidebar = () => {
         <button
           className={`sidebar-nav-item ${deepWorkActive ? 'active' : ''}`}
           onClick={toggleDeepWork}
-          style={deepWorkActive ? { background: '#000', color: '#fff' } : {}}
+          style={deepWorkActive ? { background: 'var(--ink)', color: 'var(--bg)' } : {}}
         >
           <span className="sidebar-nav-symbol">◇</span>
           <span className="sidebar-nav-label">Deep Work</span>
           {deepWorkActive && (
-            <span className="sidebar-nav-badge" style={{ background: 'rgba(255,255,255,0.2)', color: '#fff' }}>
+            <span className="sidebar-nav-badge" style={{ background: 'rgba(128,128,128,0.25)', color: 'var(--accent)' }}>
               ON
             </span>
           )}

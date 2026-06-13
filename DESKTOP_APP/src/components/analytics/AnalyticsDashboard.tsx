@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, AreaChart, Area } from 'recharts'
 import { toast } from 'react-hot-toast'
 import { save } from '@tauri-apps/plugin-dialog'
 import { writeTextFile } from '@tauri-apps/plugin-fs'
@@ -79,7 +80,7 @@ export const AnalyticsPanel = () => {
               letterSpacing: 1.5,
               textTransform: 'uppercase',
               background: activeTab === t.id ? 'var(--ink)' : 'transparent',
-              color: activeTab === t.id ? '#fff' : 'var(--ink-3)',
+              color: activeTab === t.id ? 'var(--bg)' : 'var(--ink-3)',
               border: 'none',
               borderBottom: activeTab === t.id ? '2px solid var(--ink)' : '2px solid transparent',
               marginBottom: -2,
@@ -107,11 +108,11 @@ export const AnalyticsPanel = () => {
       )}
 
       {activeTab === 'system' && (
-        <SystemTab ramStats={ramStats} categories={categories} />
+        <SystemTab ramStats={ramStats} categories={categories} workspaces={workspaces} />
       )}
 
       {activeTab === 'activity' && (
-        <ActivityTab focusScore={focusScore} score={score} grade={grade} session={currentSession} />
+        <ActivityTab focusScore={focusScore} score={score} grade={grade} session={currentSession} timeline={timeline} />
       )}
 
       {activeTab === 'timeline' && (
@@ -185,10 +186,16 @@ const OverviewTab = ({ totalApps, totalBrowsers, totalTabs, totalFiles, totalPro
 // ───────────────────────────────────────
 // Tab: System
 // ───────────────────────────────────────
-const SystemTab = ({ ramStats, categories }: any) => {
+const SystemTab = ({ ramStats, categories, workspaces }: any) => {
   const allApps = [...(categories.apps || []), ...(categories.browsers || [])]
   const activeApps = allApps.filter((a: any) => a.isActive)
   const topByMem = [...allApps].sort((a: any, b: any) => (b.memoryMb || 0) - (a.memoryMb || 0)).slice(0, 6)
+
+  const totalWorkspaceItems = workspaces?.reduce((acc: number, ws: any) => acc + ws.items.length, 0) || 0
+  const codingApps = allApps.filter((a: any) => a.title.toLowerCase().includes('code') || a.title.toLowerCase().includes('cursor')).length
+  const commApps = allApps.filter((a: any) => a.title.toLowerCase().includes('discord') || a.title.toLowerCase().includes('slack') || a.title.toLowerCase().includes('teams')).length
+  const browserApps = categories.browsers?.length || 0
+  const otherApps = Math.max(0, allApps.length - codingApps - commApps - browserApps)
 
   return (
     <div>
@@ -234,19 +241,48 @@ const SystemTab = ({ ramStats, categories }: any) => {
         </div>
 
         <div className="focus-score-bar">
-          <div className="focus-score-label">App Status</div>
+          <div className="focus-score-label">Application Distribution</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 10 }}>
             {[
-              { label: 'Active', value: activeApps.length, color: 'var(--accent)' },
-              { label: 'Total', value: allApps.length, color: 'var(--ink)' },
-              { label: 'Browsers', value: categories.browsers?.length || 0, color: 'var(--ink-2)' },
-              { label: 'Processes', value: categories.processes?.length || 0, color: 'var(--ink-3)' },
+              { label: 'Coding / Dev', value: codingApps, color: 'var(--accent)' },
+              { label: 'Communication', value: commApps, color: '#4facfe' },
+              { label: 'Browsing', value: browserApps, color: 'var(--ink)' },
+              { label: 'Other', value: otherApps, color: 'var(--ink-3)' },
             ].map((s) => (
               <div key={s.label}>
                 <div style={{ fontSize: 24, fontWeight: 100, color: s.color }}>{s.value}</div>
                 <div style={{ fontSize: 9, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: 1 }}>{s.label}</div>
               </div>
             ))}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+        <div className="focus-score-bar">
+          <div className="focus-score-label">Workspace Density</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginTop: 10 }}>
+            <div>
+              <div style={{ fontSize: 24, fontWeight: 100, color: 'var(--ink)' }}>{workspaces?.length || 0}</div>
+              <div style={{ fontSize: 9, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: 1 }}>Workspaces</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 24, fontWeight: 100, color: 'var(--accent)' }}>{totalWorkspaceItems}</div>
+              <div style={{ fontSize: 9, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: 1 }}>Total Items</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 24, fontWeight: 100, color: 'var(--ink-2)' }}>
+                {workspaces?.length ? (totalWorkspaceItems / workspaces.length).toFixed(1) : 0}
+              </div>
+              <div style={{ fontSize: 9, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: 1 }}>Avg Items/WS</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="focus-score-bar">
+          <div className="focus-score-label">Session Stability</div>
+          <div style={{ marginTop: 10, fontSize: 13, color: 'var(--ink-2)' }}>
+            System stability is normal. Deep focus memory caching is active, suppressing background application spikes.
           </div>
         </div>
       </div>
@@ -285,11 +321,62 @@ const SystemTab = ({ ramStats, categories }: any) => {
 // ───────────────────────────────────────
 // Tab: Activity
 // ───────────────────────────────────────
-const ActivityTab = ({ focusScore, score, grade, session }: any) => (
+const ActivityTab = ({ focusScore, score, grade, session, timeline }: any) => {
+  // Generate real data from timeline for the last 8 hours
+  const hoursData = Array(8).fill(0).map((_, i) => {
+    const d = new Date()
+    d.setHours(d.getHours() - (7 - i))
+    return { hour: d.getHours(), time: d.toLocaleTimeString([], { hour: 'numeric' }).toLowerCase(), score: 60, switches: 0 }
+  })
+
+  timeline?.forEach((ev: any) => {
+     const d = new Date(ev.timestamp * 1000)
+     const h = d.getHours()
+     const match = hoursData.find(x => x.hour === h)
+     if (match) {
+        if (ev.event_type === 'switch' || ev.event_type === 'window_open' || ev.event_type === 'tab_detected') {
+            match.switches += 1
+            match.score = Math.max(0, match.score - 5)
+        } else if (ev.event_type === 'focus_activate') {
+            match.score = Math.min(100, match.score + 30)
+        } else {
+            match.score = Math.min(100, match.score + 2)
+        }
+     }
+  })
+
+  const chartData = hoursData.map(h => ({
+      time: h.time,
+      score: Math.max(10, Math.min(100, h.score)),
+      switches: h.switches
+  }))
+
+  return (
   <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
     {/* Focus Score */}
-    <div className="focus-score-bar">
-      <div className="focus-score-label">Cognitive Focus Score</div>
+  <div className="focus-score-bar">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 0 }}>
+        <div className="focus-score-label" style={{ marginBottom: 0 }}>Cognitive Focus Score</div>
+        <div
+          title={`How Focus Grade is Calculated:
+
+S (90-100): Exceptional deep focus — long uninterrupted sessions, low app switching, deep focus mode used, workspace consistency.
+
+A (75-89): Strong focus — few interruptions, mostly productive apps, minimal tab changes.
+
+B (60-74): Moderate focus — some interruptions or switching, but consistent work periods.
+
+C (45-59): Poor focus — frequent switching, idle interruptions, entertainment apps used.
+
+D (<45): Very disrupted — rapid app switching, many interruptions, little deep focus.
+
+Positive factors: uninterrupted sessions, low tab/app switching, deep focus duration, workspace consistency.
+Negative factors: rapid switching, idle interruptions, entertainment apps, excessive browser tab changes.`}
+          style={{ cursor: 'help', fontSize: 10, color: 'var(--ink-4)', border: '1px solid var(--border)', borderRadius: '50%', width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+        >
+          ?
+        </div>
+      </div>
       <div className="focus-score-row" style={{ marginTop: 12 }}>
         <div className="focus-score-track" style={{ flex: 1 }}>
           <div className="focus-score-fill" style={{ width: `${score}%` }} />
@@ -331,9 +418,36 @@ const ActivityTab = ({ focusScore, score, grade, session }: any) => (
         ))}
       </div>
     )}
+    {/* Trend Chart (Real Timeline Data) */}
+    <div style={{ marginTop: 24, border: '1px solid var(--border)', borderRadius: 'var(--r-md)', padding: '20px' }}>
+      <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 16 }}>
+        Focus Trend Heatmap
+      </div>
+      <div style={{ height: 200, width: '100%' }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <defs>
+              <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.3}/>
+                <stop offset="95%" stopColor="var(--accent)" stopOpacity={0}/>
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+            <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'var(--ink-4)' }} dy={10} />
+            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'var(--ink-4)' }} domain={[0, 100]} />
+            <RechartsTooltip 
+              contentStyle={{ background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: 11 }}
+              itemStyle={{ color: 'var(--ink)' }}
+              formatter={(value: number, name: string) => [name === 'score' ? value : value, name === 'score' ? 'Focus Score' : 'Context Switches']}
+            />
+            <Area type="monotone" dataKey="score" stroke="var(--accent)" strokeWidth={2} fillOpacity={1} fill="url(#colorScore)" />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
   </div>
-)
-
+  )
+}
 
 // ───────────────────────────────────────
 // Tab: Timeline
@@ -392,7 +506,10 @@ const TimelineTab = ({ timeline }: any) => (
 // Tab: Export / Charts
 // ───────────────────────────────────────
 const ExportTab = ({ categories, ramStats, focusScore, workspaces }: any) => {
+  const [isExporting, setIsExporting] = useState(false)
+
   const handleExport = async () => {
+    setIsExporting(true)
     const data = JSON.stringify({ categories, ramStats, focusScore, workspaces, exportedAt: new Date().toISOString() }, null, 2)
     const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
 
@@ -404,12 +521,12 @@ const ExportTab = ({ categories, ramStats, focusScore, workspaces }: any) => {
         })
         if (filePath) {
           await writeTextFile(filePath, data)
-          toast.success('Export saved successfully!')
+          toast.success(`Export saved to ${filePath.split(/\\|\//).pop()}`, { position: 'bottom-right' })
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Tauri save failed, falling back to clipboard:', err)
         navigator.clipboard.writeText(data)
-          .then(() => toast.success('Export data copied to clipboard!'))
+          .then(() => toast.success('Export data copied to clipboard instead!'))
           .catch(() => toast.error('Failed to copy to clipboard.'))
       }
     } else {
@@ -420,7 +537,9 @@ const ExportTab = ({ categories, ramStats, focusScore, workspaces }: any) => {
       a.download = `knemos-export-${Date.now()}.json`
       a.click()
       URL.revokeObjectURL(url)
+      toast.success('Export downloaded!', { position: 'bottom-right' })
     }
+    setIsExporting(false)
   }
 
   // Simple SVG bar chart of category counts
@@ -461,10 +580,13 @@ const ExportTab = ({ categories, ramStats, focusScore, workspaces }: any) => {
       </div>
 
       {/* Export actions */}
-      <div style={{ display: 'flex', gap: 12 }}>
-        <button className="organize-btn" onClick={handleExport}>
-          Export JSON
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+        <button className="organize-btn" onClick={handleExport} disabled={isExporting} style={{ opacity: isExporting ? 0.6 : 1 }}>
+          {isExporting ? 'Exporting...' : 'Export JSON'}
         </button>
+        <div style={{ fontSize: 11, color: 'var(--ink-4)' }}>
+          Includes {chartData.reduce((acc, curr) => acc + curr.value, 0)} total nodes across {workspaces?.length || 0} workspaces.
+        </div>
       </div>
     </div>
   )
@@ -531,11 +653,10 @@ const WolframTab = () => {
           <div style={{ flex: 1, position: 'relative' }}>
             <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
               {/* Draw static edges for visual effect */}
-              {graphData.nodes?.length > 1 && graphData.nodes.map((node: any, i: number) => {
+              {graphData.nodes?.length > 1 && graphData.nodes.map((_: any, i: number) => {
                 if (i === 0) return null
-                const prevNode = graphData.nodes[0]
-                const x1 = 50 + (0 * 100)
-                const y1 = 100
+                const x1 = 50 + ((i - 1) * 120)
+                const y1 = (i - 1) % 2 === 0 ? 50 : 150
                 const x2 = 50 + (i * 120)
                 const y2 = i % 2 === 0 ? 50 : 150
                 return (

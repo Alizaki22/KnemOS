@@ -24,6 +24,13 @@
       }
     ]
   },
+  "plugins": {
+    "deep-link": {
+      "desktop": {
+        "schemes": ["knemos"]
+      }
+    }
+  },
   "bundle": {
     "active": true,
     "targets": "all",

@@ -120,9 +120,9 @@ def _load_user_workspaces() -> list[dict]:
 
 @router.post("/organize")
 async def organize():
-    """Full AI clustering pipeline."""
-    windows = get_open_windows()
-    tabs = get_browser_tabs()
+    import asyncio
+    windows = await asyncio.to_thread(get_open_windows)
+    tabs = await asyncio.to_thread(get_browser_tabs)
     all_items = windows + tabs
 
     if len(all_items) < 2:
@@ -133,8 +133,8 @@ async def organize():
         }
 
     texts = [item.title for item in all_items]
-    embeddings = embedder.embed_texts(texts)
-    labels = cluster_items(embeddings)
+    embeddings = await asyncio.to_thread(embedder.embed_texts, texts)
+    labels = await asyncio.to_thread(cluster_items, embeddings)
 
     clusters: dict[int, list] = {}
     for item, label in zip(all_items, labels):
@@ -157,9 +157,9 @@ async def organize():
 
     _cache["workspaces"] = workspaces
     _cache["updated_at"] = int(time.time())
-    _save_workspaces_to_db(workspaces)
+    await asyncio.to_thread(_save_workspaces_to_db, workspaces)
 
-    log_activity_event("organize", f"Clustered {len(all_items)} items into {len(workspaces)} workspaces")
+    await asyncio.to_thread(log_activity_event, "organize", f"Clustered {len(all_items)} items into {len(workspaces)} workspaces")
 
     await event_bus.emit("workspaces_updated", workspaces)
 
@@ -172,8 +172,9 @@ async def organize():
 @router.get("/suggest")
 async def suggest_workspaces():
     """Return AI suggested workspace groupings."""
-    windows = get_open_windows()
-    tabs = get_browser_tabs()
+    import asyncio
+    windows = await asyncio.to_thread(get_open_windows)
+    tabs = await asyncio.to_thread(get_browser_tabs)
     all_items = windows + tabs
     
     if len(all_items) < 2:
@@ -255,7 +256,8 @@ async def summarize_workspace(payload: SummaryRequest):
     )
 
     for model in MODEL_PRIORITY:
-        result = _try_ollama(model, prompt, timeout=8.0)
+        import asyncio
+        result = await asyncio.to_thread(_try_ollama, model, prompt, timeout=8.0)
         if result:
             return {"summary": result}
 
@@ -277,7 +279,8 @@ async def get_categories():
     Return all live system items categorized by type.
     This is the source of truth for the home screen categories.
     """
-    categories = get_all_items_categorized()
+    import asyncio
+    categories = await asyncio.to_thread(get_all_items_categorized)
     return {
         "categories": categories,
         "timestamp": int(time.time())

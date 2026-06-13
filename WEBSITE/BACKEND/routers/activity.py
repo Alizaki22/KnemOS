@@ -21,12 +21,14 @@ class ActivityEvent(BaseModel):
 @router.get("/timeline")
 async def timeline(hours: int = 24, limit: int = 100):
     """Return chronological activity events from the last N hours."""
-    events = get_activity_timeline(hours=hours, limit=limit)
+    import asyncio
+    events = await asyncio.to_thread(get_activity_timeline, hours=hours, limit=limit)
     return {"events": events, "count": len(events)}
 
 
 @router.post("/log")
 async def log_event(event: ActivityEvent):
     """Log an activity event (window open, tab change, focus, etc.)."""
-    log_activity_event(event.event_type, event.title, event.metadata or {})
+    import asyncio
+    await asyncio.to_thread(log_activity_event, event.event_type, event.title, event.metadata or {})
     return {"status": "logged"}

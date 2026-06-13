@@ -23,10 +23,10 @@ export const TitleBar = () => {
   const handleMax = () => appWindow?.toggleMaximize()
 
   return (
-    <div className="titlebar">
+    <div className="titlebar" data-tauri-drag-region onPointerDown={() => appWindow?.startDragging()}>
       <div className="titlebar-left" data-tauri-drag-region>
         <div className="titlebar-logo flex items-center gap-2" data-tauri-drag-region>
-          <img src="/KNEMOS.png" alt="KNEMOS Logo" className="w-4 h-4 object-contain pointer-events-none" />
+          <img src="/KNEMOS.png" alt="KNEMOS Logo" style={{ width: 18, height: 18, objectFit: 'contain', pointerEvents: 'none', marginRight: 6 }} />
           <span className="titlebar-logo-text" data-tauri-drag-region>KNEMOS</span>
         </div>
         <span className="titlebar-section-label" data-tauri-drag-region>
@@ -37,7 +37,7 @@ export const TitleBar = () => {
       {/* Draggable spacer to allow dragging the middle of the window */}
       <div className="flex-1 h-full" data-tauri-drag-region />
 
-      <div className="titlebar-right">
+      <div className="titlebar-right" onPointerDown={(e) => e.stopPropagation()}>
         {/* Backend status */}
         <div className="titlebar-status">
           <div className={`titlebar-status-dot ${isConnected ? 'connected' : ''}`} />

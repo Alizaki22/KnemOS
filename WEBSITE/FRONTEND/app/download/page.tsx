@@ -1,8 +1,10 @@
 'use client'
 import { useSearchParams } from 'next/navigation'
-import { useEffect, Suspense } from 'react'
+import { useEffect, Suspense, useState } from 'react'
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
 
-function DownloadContent() {
+function DeepLinkHandler() {
   const params = useSearchParams()
   const token = params.get('token')
 
@@ -18,16 +20,34 @@ function DownloadContent() {
 }
 
 export default function DownloadPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [loadingAuth, setLoadingAuth] = useState(true)
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const supabase = createClient()
+        const { data: { session } } = await supabase.auth.getSession()
+        setIsAuthenticated(!!session)
+      } catch {
+        setIsAuthenticated(false)
+      } finally {
+        setLoadingAuth(false)
+      }
+    }
+    checkAuth()
+  }, [])
+
   return (
-    <main className="min-h-screen bg-[#fafafa] flex items-center justify-center py-24 px-6 relative">
+    <main className="min-h-screen bg-[#fafafa] flex items-center justify-center py-24 px-6 relative text-black">
       <Suspense fallback={null}>
-        <DownloadContent />
+        <DeepLinkHandler />
       </Suspense>
       
       {/* Back Button */}
-      <a href="/" className="absolute top-8 left-8 text-xs font-bold tracking-[2px] uppercase text-black hover:text-[#888] transition-colors flex items-center gap-2">
+      <Link href="/" className="absolute top-8 left-8 text-xs font-bold tracking-[2px] uppercase hover:text-[#888] transition-colors flex items-center gap-2">
         <span>←</span> Back to Home
-      </a>
+      </Link>
 
       <div className="max-w-4xl w-full mt-8">
         
@@ -36,8 +56,52 @@ export default function DownloadPage() {
           <div className="w-[30px] h-[30px] border border-black rotate-45 mx-auto"></div>
         </div>
 
-        {/* Asymmetric Grid from Minimal White Services */}
-        
+        {/* Auth Status Banner */}
+        <div className="mb-8 border border-black p-4 flex items-center justify-between bg-white">
+          {!loadingAuth && !isAuthenticated ? (
+            <>
+              <div>
+                <p className="text-sm font-bold text-black">Sign in required to download</p>
+                <p className="text-xs text-[#666] mt-1">Create a free account to access all downloads.</p>
+              </div>
+              <div className="flex gap-4">
+                <Link href="/signin" className="text-xs uppercase tracking-[2px] font-bold border border-black px-4 py-2 hover:bg-[#f5f5f5] transition-colors text-black">
+                  Sign In
+                </Link>
+                <Link href="/signup" className="text-xs uppercase tracking-[2px] font-bold bg-black text-white px-4 py-2 hover:bg-[#111] transition-colors">
+                  Sign Up Free
+                </Link>
+              </div>
+            </>
+          ) : !loadingAuth && isAuthenticated ? (
+            <>
+              <div>
+                <p className="text-sm font-bold text-black flex items-center gap-2">
+                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                  Authenticated
+                </p>
+                <p className="text-xs text-[#666] mt-1">You have access to all downloads.</p>
+              </div>
+              <div>
+                <button 
+                  onClick={async () => {
+                    const supabase = createClient();
+                    await supabase.auth.signOut();
+                    setIsAuthenticated(false);
+                  }}
+                  className="text-xs uppercase tracking-[2px] font-bold border border-black px-4 py-2 hover:bg-[#f5f5f5] transition-colors text-black"
+                >
+                  Sign Out
+                </button>
+              </div>
+            </>
+          ) : (
+            <div>
+              <p className="text-sm font-bold text-black">Checking auth...</p>
+            </div>
+          )}
+        </div>
+
         {/* Desktop App */}
         <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-[2px] mb-[2px]">
           <div className="bg-white p-12 border border-black relative group hover:-translate-y-1 transition-transform">
@@ -45,9 +109,28 @@ export default function DownloadPage() {
             <p className="text-sm text-[#666] leading-relaxed mb-8">
               The core operating layer for Windows 10/11. Requires local installation of Ollama and Tesseract OCR for maximum offline privacy.
             </p>
-            <a href="/downloads/KNEMOS-Setup.exe" className="cta-button">
-              Download .exe
-            </a>
+            {isAuthenticated ? (
+              <a 
+                href="/downloads/KNEMOS-Setup.exe" 
+                className="inline-block px-8 py-3 bg-black text-white text-xs uppercase tracking-[2px] font-bold hover:bg-[#111] transition-colors"
+              >
+                Download .exe
+              </a>
+            ) : (
+              <div className="space-y-2">
+                <button 
+                  disabled
+                  className="inline-block px-8 py-3 bg-[#ccc] text-white text-xs uppercase tracking-[2px] font-bold cursor-not-allowed opacity-60"
+                >
+                  Download .exe
+                </button>
+                {!loadingAuth && (
+                  <p className="text-xs text-[#888]">
+                    <Link href="/signin" className="underline hover:text-black">Sign in</Link> to download
+                  </p>
+                )}
+              </div>
+            )}
           </div>
           <div className="bg-black text-white p-12 flex flex-col justify-center items-center text-center">
             <div className="text-5xl font-[100] font-display mb-4">01</div>
@@ -66,9 +149,30 @@ export default function DownloadPage() {
             <p className="text-sm text-[#666] leading-relaxed mb-8">
               Chrome & Edge extension to feed your active tabs into the KNEMOS semantic memory pipeline. Optional, but highly recommended.
             </p>
-            <a href="https://chrome.google.com/webstore/detail/knemos/your-extension-id" className="inline-block px-8 py-3 border-2 border-black text-xs uppercase tracking-[2px] font-bold text-black hover:bg-black hover:text-white transition-colors">
-              Install Extension
-            </a>
+            {isAuthenticated ? (
+              <a 
+                href="https://chrome.google.com/webstore/detail/knemos/your-extension-id" 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block px-8 py-3 border-2 border-black text-xs uppercase tracking-[2px] font-bold text-black hover:bg-black hover:text-white transition-colors"
+              >
+                Install Extension
+              </a>
+            ) : (
+              <div className="space-y-2">
+                <button 
+                  disabled
+                  className="inline-block px-8 py-3 border-2 border-[#ccc] text-xs uppercase tracking-[2px] font-bold text-[#ccc] cursor-not-allowed opacity-60"
+                >
+                  Install Extension
+                </button>
+                {!loadingAuth && (
+                  <p className="text-xs text-[#888]">
+                    <Link href="/signin" className="underline hover:text-black">Sign in</Link> to access
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

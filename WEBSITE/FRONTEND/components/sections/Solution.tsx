@@ -1,5 +1,5 @@
 'use client'
-import { motion } from 'framer-motion'
+
 
 export const Solution = () => (
   <section className="bg-white py-20 px-6">

@@ -1,22 +1,32 @@
 import { create } from 'zustand'
-import { invoke } from '@tauri-apps/api/core'
+
 
 interface AuthState {
   token: string
   fetchToken: () => Promise<void>
+  setToken: (token: string) => void
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   token: '',
   fetchToken: async () => {
     try {
-      // In a real app we might handle web vs tauri better,
-      // but assuming Tauri desktop for this local auth
-      const token: string = await invoke('get_auth_token')
+      let token = localStorage.getItem('knemos_jwt') || ''
+      if (!token) {
+        const { invoke } = await import('@tauri-apps/api/core')
+        token = await invoke('get_auth_token')
+        if (token) {
+          localStorage.setItem('knemos_jwt', token)
+        }
+      }
       set({ token })
     } catch (e) {
       console.error('[Auth] Failed to get auth token', e)
     }
+  },
+  setToken: (token: string) => {
+    localStorage.setItem('knemos_jwt', token)
+    set({ token })
   }
 }))
 

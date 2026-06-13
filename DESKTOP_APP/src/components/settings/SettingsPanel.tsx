@@ -1,13 +1,19 @@
 import { useState, useEffect } from 'react'
 import { authenticatedFetch } from '../../store/auth.store'
 import { useSettingsStore, ACCENTS, AccentColor, OllamaModel } from '../../store/settings.store'
-
+import { useAuthStore } from '../../store/auth.store'
 export const SettingsPanel = () => {
-  const { accent, model, isInverted, setAccent, setModel, setInverted } = useSettingsStore()
+  const { accent, customColorHex, model, isInverted, deepFocusTimerSeconds, dismissedFeatureReminder, setAccent, setCustomColorHex, setModel, setInverted, setDeepFocusTimerSeconds, setDismissedFeatureReminder } = useSettingsStore()
   const [backendStatus, setBackendStatus] = useState<'idle' | 'ok' | 'fail'>('idle')
   const [ollamaStatus, setOllamaStatus] = useState<'idle' | 'ok' | 'missing' | 'fail'>('idle')
   const [extensionStatus, setExtensionStatus] = useState<'idle' | 'ok' | 'fail'>('idle')
   const [resources, setResources] = useState<any>(null)
+  const { token: currentToken, setToken } = useAuthStore()
+  const [tokenInput, setTokenInput] = useState('')
+
+  useEffect(() => {
+    setTokenInput(currentToken || '')
+  }, [currentToken])
 
   useEffect(() => {
     authenticatedFetch('http://127.0.0.1:8765/api/system/resources')
@@ -54,6 +60,13 @@ export const SettingsPanel = () => {
     }
   }
 
+  const handleSaveToken = () => {
+    if (tokenInput.trim() !== '') {
+      setToken(tokenInput.trim())
+      alert('Token saved securely. Please restart the backend connection or reload the app if connection fails.')
+    }
+  }
+
   const handleResetOnboarding = () => {
     if (confirm('This will show the setup guide next time you launch KNEMOS. Continue?')) {
       localStorage.removeItem('knemos-onboarded')
@@ -95,7 +108,7 @@ export const SettingsPanel = () => {
             <div className="settings-row-label">Accent Color</div>
             <div className="settings-row-desc">Used for active states, highlights, and buttons.</div>
           </div>
-          <div className="accent-swatches">
+          <div className="accent-swatches" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             {(Object.keys(ACCENTS) as AccentColor[]).map((c) => (
               <div
                 key={c}
@@ -105,6 +118,21 @@ export const SettingsPanel = () => {
                 title={c}
               />
             ))}
+            <div style={{ width: 1, height: 16, background: 'var(--border)', margin: '0 4px' }} />
+            <input
+              type="color"
+              value={customColorHex}
+              onChange={(e) => {
+                setCustomColorHex(e.target.value)
+                setAccent('custom')
+              }}
+              title="Custom Color"
+              style={{
+                width: 24, height: 24, padding: 0, border: 'none', borderRadius: '50%', cursor: 'pointer',
+                outline: accent === 'custom' ? '2px solid var(--ink)' : 'none',
+                outlineOffset: 2
+              }}
+            />
           </div>
         </div>
 
@@ -124,11 +152,36 @@ export const SettingsPanel = () => {
             >
               <div style={{
                 position: 'absolute', top: 2, left: isInverted ? 18 : 2,
-                width: 16, height: 16, borderRadius: '50%', background: '#fff',
+                width: 16, height: 16, borderRadius: '50%', background: 'var(--bg-panel)',
                 transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
               }} />
             </div>
             <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--ink-3)' }}>Inverted</span>
+          </div>
+        </div>
+
+        <div className="settings-row">
+          <div>
+            <div className="settings-row-label">Deep Focus Timer</div>
+            <div className="settings-row-desc">Time of inactivity before non-workspace apps are minimized.</div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <select
+              value={deepFocusTimerSeconds}
+              onChange={(e) => setDeepFocusTimerSeconds(parseInt(e.target.value) || 300)}
+              style={{
+                padding: '4px 8px', fontSize: 12, border: '1px solid var(--border)', borderRadius: 4,
+                background: 'var(--bg-panel)', color: 'var(--ink)', width: 120
+              }}
+            >
+              <option value="15">15 seconds</option>
+              <option value="45">45 seconds</option>
+              <option value="60">1 minute</option>
+              <option value="120">2 minutes</option>
+              <option value="300">5 minutes</option>
+              <option value="900">15 minutes</option>
+              <option value="3600">1 hour</option>
+            </select>
           </div>
         </div>
       </div>
@@ -217,7 +270,27 @@ export const SettingsPanel = () => {
 
       {/* System & Connectivity */}
       <div className="settings-section">
-        <div className="settings-section-header">System & Connectivity</div>
+        <div className="settings-section-header">Authentication & Connection</div>
+
+        <div className="settings-row">
+          <div>
+            <div className="settings-row-label">Desktop App Auth Token</div>
+            <div className="settings-row-desc">Paste your authentication token from the KNEMOS website.</div>
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <input
+              type="password"
+              placeholder="eyJhbGci..."
+              value={tokenInput}
+              onChange={e => setTokenInput(e.target.value)}
+              style={{
+                width: 140, padding: '4px 8px', fontSize: 12, border: '1px solid var(--border)', borderRadius: 4,
+                background: 'var(--bg-panel)', color: 'var(--ink)'
+              }}
+            />
+            <button className="test-btn" onClick={handleSaveToken}>Save & Validate</button>
+          </div>
+        </div>
 
         <div className="settings-row">
           <div>
@@ -246,9 +319,29 @@ export const SettingsPanel = () => {
         </div>
       </div>
 
-      {/* Onboarding */}
+      {/* Onboarding & Features */}
       <div className="settings-section">
         <div className="settings-section-header">Help & Setup</div>
+
+        <div className="settings-row">
+          <div>
+            <div className="settings-row-label">Optional Features Reminder</div>
+            <div className="settings-row-desc">Show a startup overlay if recommended features (Wolfram, LLM) are missing.</div>
+          </div>
+          <div 
+            style={{
+              width: 36, height: 20, borderRadius: 10, background: !dismissedFeatureReminder ? 'var(--accent)' : 'var(--border)',
+              position: 'relative', cursor: 'pointer', transition: 'background 0.2s'
+            }}
+            onClick={() => setDismissedFeatureReminder(!dismissedFeatureReminder)}
+          >
+            <div style={{
+              position: 'absolute', top: 2, left: !dismissedFeatureReminder ? 18 : 2,
+              width: 16, height: 16, borderRadius: '50%', background: 'var(--bg-panel)',
+              transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+            }} />
+          </div>
+        </div>
 
         <div className="settings-row">
           <div>

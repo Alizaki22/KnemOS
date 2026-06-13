@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor } from '@dnd-kit/core'
+import toast from 'react-hot-toast'
 import { CategoryCard } from './CategoryCard'
 import { ProcessCategoryCard } from './ProcessCategoryCard'
 import { useCategoriesStore, CategoryType, CategoryItem } from '../../store/categories.store'
@@ -33,10 +34,14 @@ export const CategoryGrid = () => {
     }
   }
 
-  const handleDragEndEvent = (event: any) => {
-    const { over } = event
+  const handleDragEndEvent = async (event: any) => {
+    const { over, active } = event
     if (over && dragItem) {
-      addItemToWorkspace(over.id as string, {
+      const targetWsId = over.id as string
+      const sourceWsId = active.data.current?.sourceWorkspaceId
+
+      // Move item
+      addItemToWorkspace(targetWsId, {
         id: dragItem.id,
         title: dragItem.title,
         source: dragItem.source,
@@ -46,6 +51,13 @@ export const CategoryGrid = () => {
         memoryMb: dragItem.memoryMb,
         isActive: dragItem.isActive,
       })
+
+      // If it came from another workspace, remove it from the old one
+      if (sourceWsId && sourceWsId !== targetWsId) {
+        useWorkspaceStore.getState().removeItemFromWorkspace(sourceWsId, dragItem.id)
+      }
+      
+      toast.success(`Moved to workspace`, { position: 'bottom-right' })
     }
     setDragItem(null)
   }

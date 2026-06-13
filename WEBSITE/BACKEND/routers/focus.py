@@ -79,7 +79,8 @@ async def activate_focus(req: FocusActivateRequest):
                 pass
 
     try:
-        win32gui.EnumWindows(enum_minimize, None)
+        import asyncio
+        await asyncio.to_thread(win32gui.EnumWindows, enum_minimize, None)
         _focus_state["minimized_hwnds"] = minimized
 
         log_activity_event("focus_activate", req.workspace_name or "Deep Focus", {

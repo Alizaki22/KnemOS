@@ -95,8 +95,7 @@ Returns: screenshot · timestamp · full workspace state
 * **Concept Search**: Search for "vacation" to find a screenshot containing the word "Hawaii".
 
 ### 02.5 · Wolfram Intelligence Layer (Phase 23)
-* **Computational Analytics**: Deep pro
-ductivity forecasts, context-switch tracking, and memory relationship graphs powered by Wolfram Engine.
+* **Computational Analytics**: Deep productivity forecasts, context-switch tracking, and memory relationship graphs powered by Wolfram Engine.
 * **Optional Enhancement**: KNEMOS functions flawlessly without it, gracefully falling back to standard Python heuristics.
 * **100% Local**: The kernel runs entirely on your local machine; absolutely no cloud endpoints.
 

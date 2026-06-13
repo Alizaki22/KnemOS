@@ -7,9 +7,13 @@ import { OnboardingModal } from './components/onboarding/OnboardingModal'
 import { useSettingsStore } from './store/settings.store'
 import { useSystemStore } from './store/system.store'
 
+import { StartupOverlay } from './components/system/StartupOverlay'
+
 import { useWorkspaceStore } from './store/workspace.store'
 import { useActivityStore } from './store/activity.store'
 import { useStableWebSocket } from './hooks/useStableWebSocket'
+import { useAuthStore } from './store/auth.store'
+import { onOpenUrl } from '@tauri-apps/plugin-deep-link'
 
 const API = 'http://127.0.0.1:8765'
 
@@ -19,9 +23,32 @@ function App() {
 
   const { fetchWorkspaces } = useWorkspaceStore()
   const { fetchTimeline, fetchCurrentSession } = useActivityStore()
+  const { setToken } = useAuthStore()
 
   // 1. WebSocket singleton connection
   useStableWebSocket()
+
+  // Deep link parsing
+  useEffect(() => {
+    const unlisten = onOpenUrl((urls) => {
+      for (const url of urls) {
+        if (url.includes('knemos://auth')) {
+          try {
+            const urlObj = new URL(url)
+            const token = urlObj.searchParams.get('token')
+            if (token) {
+              setToken(token)
+            }
+          } catch (e) {
+            console.error('Failed to parse deep link', e)
+          }
+        }
+      }
+    })
+    return () => {
+      unlisten.then(fn => fn())
+    }
+  }, [setToken])
 
   const [onboardingDone, setOnboardingDone] = useState(
     () => localStorage.getItem('knemos-onboarded') === 'true'
@@ -104,6 +131,7 @@ function App() {
       {!onboardingDone && (
         <OnboardingModal onComplete={handleOnboardingComplete} />
       )}
+      {onboardingDone && <StartupOverlay />}
     </div>
   )
 }

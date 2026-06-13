@@ -57,11 +57,26 @@ async def verify_token(request: Request, auth_header: str = Security(api_key_hea
             
     if token:
         try:
+            # First try local IPC token
             payload = jwt.decode(token, _secret, algorithms=["HS256"])
             if payload.get("sub") == "knemos_local":
                 return True
         except jwt.InvalidTokenError:
             pass
+            
+        try:
+            # For Supabase Auth Tokens
+            payload = jwt.decode(token, options={"verify_signature": False})
+            print(f"[Auth] Decoded payload: {payload}")
+            if payload.get("sub") or payload.get("role") == "authenticated":
+                return True
+            else:
+                print(f"[Auth] Payload rejected: missing sub or role. Payload: {payload}")
+        except Exception as e:
+            print(f"[Auth] JWT Decode error: {e}")
+            pass
+            
+    print(f"[Auth] Rejecting token: {token}")
             
     # For local dev extension integration without token (if needed, we can whitelist specific origins or IPs)
     # Since the Chrome Extension is local and can't read the file, we can either use a fixed extension key 

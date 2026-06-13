@@ -142,7 +142,7 @@ export const ChatPanel = () => {
             <button
               key={s}
               className="chat-suggestion-btn"
-              onClick={() => { setInput(s); sendMessage(s, mode) }}
+              onClick={() => { setInput(''); sendMessage(s, mode) }}
             >
               {s}
             </button>

@@ -7,14 +7,18 @@ router = APIRouter()
 
 @router.get("/focus-score")
 async def focus_score():
-    return compute_focus_score()
+    import asyncio
+    return await asyncio.to_thread(compute_focus_score)
 
 
 @router.get("/heatmap")
 async def heatmap():
-    return {"data": get_heatmap()}
+    import asyncio
+    data = await asyncio.to_thread(get_heatmap)
+    return {"data": data}
 
 
 @router.get("/predictions")
 async def predictions():
-    return get_predictions()
+    import asyncio
+    return await asyncio.to_thread(get_predictions)
